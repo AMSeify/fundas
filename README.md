@@ -183,7 +183,114 @@ print(df.groupby('region')['sales'].sum())
 - beautifulsoup4 >= 4.9.0
 - opencv-python >= 4.8.1.78
 
+## Advanced Features
+
+### Caching
+
+Fundas includes an intelligent caching system to reduce redundant API calls:
+
+```python
+import fundas as fd
+
+# Enable caching (enabled by default)
+df = fd.read_pdf("document.pdf", prompt="Extract data")
+
+# The same file with the same prompt will use cached results
+df2 = fd.read_pdf("document.pdf", prompt="Extract data")  # No API call
+
+# Disable caching if needed
+from fundas import OpenRouterClient
+client = OpenRouterClient(api_key="key", use_cache=False)
+```
+
+### Exporting Data
+
+Export your DataFrames with AI-powered summarization:
+
+```python
+import fundas as fd
+import pandas as pd
+
+# Create a DataFrame
+df = pd.DataFrame({"product": ["A", "B", "C"], "sales": [100, 200, 150]})
+
+# Export to CSV
+fd.to_summarized_csv(df, "output.csv")
+
+# Export to Excel with AI summary
+fd.to_summarized_excel(
+    df,
+    "summary.xlsx",
+    prompt="Add a summary row with totals"
+)
+
+# Generate AI summary
+summary = fd.summarize_dataframe(df, prompt="Summarize sales performance")
+print(summary)
+```
+
+### Error Handling
+
+Fundas includes robust error handling with automatic retries:
+
+```python
+import fundas as fd
+
+try:
+    df = fd.read_pdf("document.pdf", prompt="Extract data")
+except FileNotFoundError:
+    print("File not found")
+except ValueError as e:
+    print(f"Invalid parameters: {e}")
+except RuntimeError as e:
+    print(f"API error: {e}")
+```
+
+### Cache Management
+
+Control the cache behavior:
+
+```python
+from fundas import get_cache
+
+cache = get_cache()
+
+# Clear all cache entries
+cache.clear()
+
+# Clear only expired entries
+cache.clear_expired()
+
+# Disable/enable cache
+cache.disable()
+cache.enable()
+```
+
 ## API Reference
+
+### Read Functions
+
+All read functions share similar parameters:
+
+**Common Parameters:**
+- `filepath` or `url` (str | Path): Source file or URL
+- `prompt` (str): Description of what data to extract
+- `columns` (List[str], optional): Column names to extract
+- `api_key` (str, optional): OpenRouter API key
+- `model` (str, optional): AI model to use (default: gpt-3.5-turbo)
+
+**Returns:** pandas DataFrame
+
+### Export Functions
+
+All export functions accept:
+
+**Parameters:**
+- `df` (pd.DataFrame): DataFrame to export
+- `filepath` (str | Path): Output file path
+- `prompt` (str, optional): AI transformation prompt
+- `api_key` (str, optional): OpenRouter API key
+- `model` (str, optional): AI model to use
 
 ### `read_pdf(filepath, prompt, columns=None, api_key=None, model=None)`
 
@@ -252,13 +359,71 @@ Extract structured data from video files.
 
 **Returns:** pandas DataFrame
 
+### `to_summarized_csv(df, filepath, prompt=None, api_key=None, model=None, **kwargs)`
+
+Export DataFrame to CSV with optional AI-powered summarization.
+
+**Parameters:**
+- `df` (pd.DataFrame): DataFrame to export
+- `filepath` (str | Path): Path to save the CSV file
+- `prompt` (str, optional): Prompt to transform/summarize data
+- `api_key` (str, optional): OpenRouter API key
+- `model` (str, optional): AI model to use
+- `**kwargs`: Additional arguments for `pd.DataFrame.to_csv()`
+
+### `to_summarized_excel(df, filepath, prompt=None, sheet_name="Sheet1", api_key=None, model=None, **kwargs)`
+
+Export DataFrame to Excel with optional AI-powered summarization.
+
+### `to_summarized_json(df, filepath, prompt=None, api_key=None, model=None, orient="records", **kwargs)`
+
+Export DataFrame to JSON with optional AI-powered summarization.
+
+### `summarize_dataframe(df, prompt="Provide a summary of this data", api_key=None, model=None)`
+
+Generate an AI-powered summary of a DataFrame.
+
+**Returns:** str (AI-generated summary)
+
+## Configuration
+
+### Environment Variables
+
+- `OPENROUTER_API_KEY`: Your OpenRouter API key
+
+### Cache Settings
+
+The cache is stored in `~/.fundas/cache/` by default. You can configure:
+- Cache directory location
+- Time-to-live (TTL) for cache entries
+- Enable/disable caching
+
+## Performance Tips
+
+1. **Use caching**: Keep caching enabled (default) to avoid redundant API calls
+2. **Specify columns**: When you know what columns you need, specify them explicitly
+3. **Choose the right model**: Balance speed, cost, and accuracy by selecting appropriate models
+4. **Batch operations**: Process multiple files in sequence to leverage cache warming
+
 ## License
 
 MIT License - see LICENSE file for details
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! We appreciate bug fixes, new features, documentation improvements, and more.
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Setting up your development environment
+- Coding standards and style guide
+- Testing requirements
+- Pull request process
+
+Quick start:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with tests
+4. Submit a pull request
 
 ## Support
 
