@@ -23,6 +23,7 @@ from .readers import (
 )
 
 from .core import OpenRouterClient
+from .cache import get_cache, APICache
 
 __all__ = [
     "read_pdf",
@@ -31,4 +32,6 @@ __all__ = [
     "read_webpage",
     "read_video",
     "OpenRouterClient",
+    "get_cache",
+    "APICache",
 ]
