@@ -19,6 +19,7 @@ from fundas.exporters import (
 
 # Check if openpyxl is available for Excel tests
 try:
+    import openpyxl
 
     HAS_OPENPYXL = True
 except ImportError:
