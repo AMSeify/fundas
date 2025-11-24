@@ -14,7 +14,7 @@ from .cache import get_cache
 
 class OpenRouterClient:
     """Client for interacting with OpenRouter API."""
-    
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -22,11 +22,11 @@ class OpenRouterClient:
         use_cache: bool = True,
         cache_ttl: int = 86400,
         max_retries: int = 3,
-        retry_delay: int = 1
+        retry_delay: int = 1,
     ):
         """
         Initialize OpenRouter client.
-        
+
         Args:
             api_key: OpenRouter API key. If not provided, reads from OPENROUTER_API_KEY env variable.
             model: The AI model to use for processing. Default is gpt-3.5-turbo.
@@ -47,57 +47,50 @@ class OpenRouterClient:
         self.cache = get_cache(ttl=cache_ttl) if use_cache else None
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-    
+
     def process_content(
-        self, 
-        content: str, 
-        prompt: str,
-        system_prompt: Optional[str] = None
+        self, content: str, prompt: str, system_prompt: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Send content to OpenRouter API for processing.
-        
+
         Args:
             content: The content to process (text, description, etc.)
             prompt: User prompt describing what to extract
             system_prompt: Optional system prompt to guide the AI
-            
+
         Returns:
             Response from the API containing extracted data
-            
+
         Raises:
             RuntimeError: If API communication fails after all retries
             ValueError: If the model is not supported or request is invalid
         """
         messages = []
-        
+
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
-        
-        messages.append({
-            "role": "user",
-            "content": f"{prompt}\n\nContent to analyze:\n{content}"
-        })
-        
+
+        messages.append(
+            {"role": "user", "content": f"{prompt}\n\nContent to analyze:\n{content}"}
+        )
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-        
+
         payload = {
             "model": self.model,
             "messages": messages,
         }
-        
+
         # Retry logic
         last_exception = None
         for attempt in range(self.max_retries):
             try:
                 response = requests.post(
-                    self.base_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=60
+                    self.base_url, headers=headers, json=payload, timeout=60
                 )
                 response.raise_for_status()
                 return response.json()
@@ -112,35 +105,33 @@ class OpenRouterClient:
                 last_exception = e
             except requests.exceptions.RequestException as e:
                 last_exception = e
-            
+
             # Wait before retry (except on last attempt)
             if attempt < self.max_retries - 1:
                 import time
+
                 time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
-        
+
         # All retries failed
         raise RuntimeError(
             f"Error communicating with OpenRouter API after {self.max_retries} attempts: "
             f"{str(last_exception)}"
         )
-    
+
     def extract_structured_data(
-        self,
-        content: str,
-        prompt: str,
-        columns: Optional[List[str]] = None
+        self, content: str, prompt: str, columns: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Extract structured data from content based on user prompt.
-        
+
         Args:
             content: The content to analyze
             prompt: User prompt describing what to extract
             columns: Optional list of column names to extract
-            
+
         Returns:
             Dictionary containing extracted structured data
-            
+
         Raises:
             RuntimeError: If API communication fails
             ValueError: If request parameters are invalid
@@ -150,31 +141,32 @@ class OpenRouterClient:
             cached_data = self.cache.get(content, prompt, self.model, columns)
             if cached_data is not None:
                 return cached_data
-        
+
         system_prompt = (
             "You are a data extraction assistant. Extract structured data from the provided content "
             "and return it in a JSON format that can be easily converted to a pandas DataFrame. "
             "Each key should be a column name and each value should be a list of values."
         )
-        
+
         if columns:
             system_prompt += f"\n\nExtract the following columns: {', '.join(columns)}"
-        
+
         full_prompt = (
             f"{prompt}\n\n"
             "Return the data as a JSON object where keys are column names and values are lists. "
             "If extracting single values, wrap them in a list. Example format:\n"
             '{"column1": ["value1"], "column2": ["value2"]}'
         )
-        
+
         response = self.process_content(content, full_prompt, system_prompt)
-        
+
         # Extract the response text
         if "choices" in response and len(response["choices"]) > 0:
             response_text = response["choices"][0]["message"]["content"]
-            
+
             # Try to parse JSON from the response
             import json
+
             try:
                 # Look for JSON in the response (it might be wrapped in markdown code blocks)
                 if "```json" in response_text:
@@ -187,22 +179,22 @@ class OpenRouterClient:
                     json_str = response_text[json_start:json_end].strip()
                 else:
                     json_str = response_text.strip()
-                
+
                 data = json.loads(json_str)
-                
+
                 # Cache the result
                 if self.use_cache and self.cache:
                     self.cache.set(content, prompt, self.model, data, columns)
-                
+
                 return data
             except json.JSONDecodeError:
                 # If JSON parsing fails, return raw text in a structured format
                 result = {"content": [response_text]}
-                
+
                 # Cache even the fallback result
                 if self.use_cache and self.cache:
                     self.cache.set(content, prompt, self.model, result, columns)
-                
+
                 return result
-        
+
         return {"content": ["No response from API"]}
