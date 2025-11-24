@@ -34,14 +34,24 @@ pip install -e .
 
 ### Setup
 
-First, set your OpenRouter API key:
+First, set your OpenRouter API key. You can either:
 
+**Option 1: Use environment variable**
 ```bash
 export OPENROUTER_API_KEY="your-api-key-here"
 ```
 
-Or pass it directly to the functions:
+**Option 2: Use .env file (recommended)**
+```bash
+# Copy the example file
+cp .env.example .env
 
+# Edit .env and add your credentials:
+# OPENROUTER_API_KEY=your-api-key-here
+# OPENROUTER_MODEL=openai/gpt-3.5-turbo  # Optional: set default model
+```
+
+**Option 3: Pass directly to functions**
 ```python
 import fundas as fd
 
@@ -152,11 +162,21 @@ df = fd.read_pdf(
 Use different AI models via OpenRouter:
 
 ```python
+# Option 1: Pass model parameter to each function
 df = fd.read_image(
     "complex_diagram.png",
     prompt="Extract relationships between components",
     model="anthropic/claude-3-opus"
 )
+
+# Option 2: Set default model in .env file
+# OPENROUTER_MODEL=anthropic/claude-3-sonnet
+df = fd.read_image("diagram.png", prompt="Extract data")  # Uses model from .env
+
+# Option 3: Set via environment variable
+import os
+os.environ["OPENROUTER_MODEL"] = "openai/gpt-4"
+df = fd.read_pdf("document.pdf", prompt="Extract info")
 ```
 
 ### DataFrame Operations

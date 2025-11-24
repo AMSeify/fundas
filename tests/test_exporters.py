@@ -114,31 +114,27 @@ class TestToSummarizedExcel:
                 os.unlink(tmp_path)
 
     @pytest.mark.skipif(not HAS_OPENPYXL, reason="openpyxl not installed")
-    @patch("fundas.exporters._get_client")
-    def test_excel_export_with_prompt(self, mock_get_client):
-        """Test Excel export with AI summarization."""
+    def test_excel_export_with_prompt(self):
+        """Test Excel export with prompt shows warning (AI not yet implemented)."""
         df = pd.DataFrame({"product": ["A", "B"], "sales": [100, 200]})
-
-        mock_client = Mock()
-        mock_response = {
-            "choices": [{"message": {"content": "Transform data suggestion"}}]
-        }
-        mock_client.process_content.return_value = mock_response
-        mock_get_client.return_value = mock_client
 
         with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
-            to_summarized_excel(
-                df, tmp_path, prompt="Add totals row", api_key="test-key", index=False
-            )
+            # Should show warning since AI transformation not yet implemented
+            with pytest.warns(FutureWarning, match="AI-powered transformation is not yet implemented"):
+                to_summarized_excel(
+                    df, tmp_path, prompt="Add totals row", api_key="test-key", index=False
+                )
 
-            # Verify API was called
-            mock_client.process_content.assert_called_once()
-
-            # Verify file was created
+            # Verify file was created despite warning
             assert Path(tmp_path).exists()
+            
+            # Verify the original data was saved
+            result_df = pd.read_excel(tmp_path)
+            assert len(result_df) == 2
+            assert list(result_df.columns) == ["product", "sales"]
         finally:
             if Path(tmp_path).exists():
                 os.unlink(tmp_path)

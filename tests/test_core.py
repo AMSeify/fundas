@@ -11,6 +11,7 @@ from fundas.core import OpenRouterClient
 class TestOpenRouterClient:
     """Tests for OpenRouterClient class."""
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_init_with_api_key(self):
         """Test initialization with API key."""
         client = OpenRouterClient(api_key="test-key")

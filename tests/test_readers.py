@@ -22,6 +22,7 @@ from fundas.readers import (
 class TestGetClient:
     """Tests for _get_client helper function."""
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_get_client_default_model(self):
         """Test getting client with default model."""
         client = _get_client(api_key="test-key")

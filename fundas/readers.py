@@ -18,8 +18,7 @@ def _get_client(
     api_key: Optional[str] = None, model: Optional[str] = None
 ) -> OpenRouterClient:
     """Get or create an OpenRouter client instance."""
-    default_model = model or "openai/gpt-3.5-turbo"
-    return OpenRouterClient(api_key=api_key, model=default_model)
+    return OpenRouterClient(api_key=api_key, model=model)
 
 
 def read_pdf(
