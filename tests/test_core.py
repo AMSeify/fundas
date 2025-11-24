@@ -3,8 +3,7 @@ Tests for fundas.core module.
 """
 
 import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from fundas.core import OpenRouterClient
 
 
@@ -69,6 +68,8 @@ class TestOpenRouterClient:
         # Check that post was called with correct structure
         call_args = mock_post.call_args
         messages = call_args[1]["json"]["messages"]
+        assert len(messages) == 2
+        assert result is not None
         assert len(messages) == 2
         assert messages[0]["role"] == "system"
         assert messages[1]["role"] == "user"

@@ -4,8 +4,7 @@ Tests for fundas.readers module.
 
 import pytest
 import pandas as pd
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, mock_open
+from unittest.mock import Mock, patch
 import tempfile
 import os
 
@@ -176,7 +175,7 @@ class TestReadImage:
             tmp_path = tmp.name
 
         try:
-            df = read_image(
+            read_image(
                 tmp_path, model="anthropic/claude-3-opus", api_key="test-key"
             )
 
@@ -232,7 +231,7 @@ class TestReadAudio:
             tmp_path = tmp.name
 
         try:
-            df = read_audio(tmp_path, columns=["timestamp", "text"], api_key="test-key")
+            read_audio(tmp_path, columns=["timestamp", "text"], api_key="test-key")
 
             call_args = mock_client.extract_structured_data.call_args
             assert call_args[0][2] == ["timestamp", "text"]
@@ -292,7 +291,7 @@ class TestReadWebpage:
         }
         mock_get_client.return_value = mock_client
 
-        df = read_webpage(
+        read_webpage(
             "https://example.com", columns=["title", "author"], api_key="test-key"
         )
 
@@ -365,7 +364,7 @@ class TestReadVideo:
             tmp_path = tmp.name
 
         try:
-            df = read_video(tmp_path, from_="audios", api_key="test-key")
+            read_video(tmp_path, from_="audios", api_key="test-key")
 
             # Check that content mentions audio analysis
             call_args = mock_client.extract_structured_data.call_args
@@ -397,7 +396,7 @@ class TestReadVideo:
             tmp_path = tmp.name
 
         try:
-            df = read_video(tmp_path, from_="both", api_key="test-key")
+            read_video(tmp_path, from_="both", api_key="test-key")
 
             # Check that content mentions both frame and audio analysis
             call_args = mock_client.extract_structured_data.call_args
@@ -442,7 +441,7 @@ class TestReadVideo:
             tmp_path = tmp.name
 
         try:
-            df = read_video(tmp_path, from_="pics", sample_rate=60, api_key="test-key")
+            read_video(tmp_path, from_="pics", sample_rate=60, api_key="test-key")
 
             # Check that sample rate is mentioned in content
             call_args = mock_client.extract_structured_data.call_args

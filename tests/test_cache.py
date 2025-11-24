@@ -2,11 +2,9 @@
 Tests for fundas.cache module.
 """
 
-import pytest
-import json
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 import tempfile
 import shutil
 
@@ -176,7 +174,8 @@ class TestCacheIntegration:
 
         # Set up mock cache
         mock_cache = Mock()
-        # First get() returns None (cache miss), second get() returns cached data (cache hit)
+        # First get() returns None (cache miss),
+        # second get() returns cached data (cache hit)
         mock_cache.get.side_effect = [None, {"name": ["John"]}]
         mock_cache.set = Mock()
         mock_get_cache.return_value = mock_cache

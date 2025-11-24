@@ -124,8 +124,8 @@ class OpenRouterClient:
 
         # All retries failed
         raise RuntimeError(
-            f"Error communicating with OpenRouter API after {self.max_retries} attempts: "
-            f"{str(last_exception)}"
+            f"Error communicating with OpenRouter API after "
+            f"{self.max_retries} attempts: {str(last_exception)}"
         )
 
     def extract_structured_data(
@@ -153,9 +153,12 @@ class OpenRouterClient:
                 return cached_data
 
         system_prompt = (
-            "You are a data extraction assistant. Extract structured data from the provided content "
-            "and return it in a JSON format that can be easily converted to a pandas DataFrame. "
-            "Each key should be a column name and each value should be a list of values."
+            "You are a data extraction assistant. "
+            "Extract structured data from the provided content "
+            "and return it in a JSON format that can be easily converted "
+            "to a pandas DataFrame. "
+            "Each key should be a column name and each value should be "
+            "a list of values."
         )
 
         if columns:
@@ -163,8 +166,10 @@ class OpenRouterClient:
 
         full_prompt = (
             f"{prompt}\n\n"
-            "Return the data as a JSON object where keys are column names and values are lists. "
-            "If extracting single values, wrap them in a list. Example format:\n"
+            "Return the data as a JSON object where keys are column names "
+            "and values are lists. "
+            "If extracting single values, wrap them in a list. "
+            "Example format:\n"
             '{"column1": ["value1"], "column2": ["value2"]}'
         )
 
@@ -176,7 +181,8 @@ class OpenRouterClient:
 
             # Try to parse JSON from the response
             try:
-                # Look for JSON in the response (it might be wrapped in markdown code blocks)
+                # Look for JSON in the response
+                # (it might be wrapped in markdown code blocks)
                 if "```json" in response_text:
                     json_start = response_text.find("```json") + 7
                     json_end = response_text.find("```", json_start)

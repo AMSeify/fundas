@@ -5,7 +5,7 @@ Tests for fundas.exporters module.
 import pytest
 import pandas as pd
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import tempfile
 import os
 
@@ -19,7 +19,6 @@ from fundas.exporters import (
 
 # Check if openpyxl is available for Excel tests
 try:
-    import openpyxl
 
     HAS_OPENPYXL = True
 except ImportError:

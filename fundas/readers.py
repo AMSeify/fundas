@@ -8,8 +8,6 @@ to pandas DataFrames using AI-powered extraction.
 import pandas as pd
 from typing import Optional, List, Union
 from pathlib import Path
-import base64
-import io
 
 from .core import OpenRouterClient
 
@@ -35,14 +33,16 @@ def read_pdf(
         filepath: Path to the PDF file
         prompt: Prompt describing what data to extract
         columns: Optional list of column names to extract
-        api_key: Optional OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
-        model: Optional AI model to use (default: gpt-3.5-turbo)
+        api_key: Optional OpenRouter API key
+            (uses OPENROUTER_API_KEY env var if not provided)
+        model: Optional AI model to use
+            (default: gpt-3.5-turbo)
 
     Returns:
         pandas DataFrame containing extracted data
 
     Examples:
-        >>> df = read_pdf("invoice.pdf", prompt="Extract invoice items with name, quantity, and price")
+        >>> df = read_pdf("invoice.pdf", prompt="Extract invoice items")
         >>> df = read_pdf("report.pdf", columns=["date", "metric", "value"])
     """
     try:
@@ -87,8 +87,10 @@ def read_image(
         filepath: Path to the image file
         prompt: Prompt describing what data to extract from the image
         columns: Optional list of column names to extract
-        api_key: Optional OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
-        model: Optional AI model to use (default: gpt-3.5-turbo)
+        api_key: Optional OpenRouter API key
+            (uses OPENROUTER_API_KEY env var if not provided)
+        model: Optional AI model to use
+            (default: gpt-3.5-turbo)
 
     Returns:
         pandas DataFrame containing extracted data
@@ -113,7 +115,10 @@ def read_image(
             content = f"Image file: {filepath.name} (No text detected via OCR)"
     except ImportError:
         # OCR libraries not available
-        content = f"Image file: {filepath.name} (OCR not available - install pytesseract for text extraction)"
+        content = (
+            f"Image file: {filepath.name} "
+            "(OCR not available - install pytesseract for text extraction)"
+        )
     except Exception:
         # Fallback: describe the image file
         content = f"Image file: {filepath.name}"
@@ -150,15 +155,20 @@ def read_audio(
         filepath: Path to the audio file
         prompt: Prompt describing what data to extract from the audio
         columns: Optional list of column names to extract
-        api_key: Optional OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
-        model: Optional AI model to use (default: gpt-3.5-turbo)
+        api_key: Optional OpenRouter API key
+            (uses OPENROUTER_API_KEY env var if not provided)
+        model: Optional AI model to use
+            (default: gpt-3.5-turbo)
 
     Returns:
         pandas DataFrame containing extracted data
 
     Examples:
-        >>> df = read_audio("meeting.mp3", prompt="Extract speaker names and key points")
-        >>> df = read_audio("interview.wav", columns=["speaker", "topic", "timestamp"])
+        >>> df = read_audio(
+        ...     "meeting.mp3",
+        ...     prompt="Extract speaker names and key points"
+        ... )
+        >>> df = read_audio("interview.wav", columns=["speaker", "topic"])
     """
     filepath = Path(filepath)
     if not filepath.exists():
@@ -171,7 +181,10 @@ def read_audio(
 
     # Note: Full audio transcription would require additional services
     # For now, we work with metadata and let the AI provide structure
-    content += "\n[Note: Full audio transcription requires additional audio processing services]"
+    content += (
+        "\n[Note: Full audio transcription requires "
+        "additional audio processing services]"
+    )
 
     # Use OpenRouter to extract structured data
     client = _get_client(api_key, model)
@@ -194,15 +207,17 @@ def read_webpage(
         url: URL of the webpage to read
         prompt: Prompt describing what data to extract from the webpage
         columns: Optional list of column names to extract
-        api_key: Optional OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
-        model: Optional AI model to use (default: gpt-3.5-turbo)
+        api_key: Optional OpenRouter API key
+            (uses OPENROUTER_API_KEY env var if not provided)
+        model: Optional AI model to use
+            (default: gpt-3.5-turbo)
 
     Returns:
         pandas DataFrame containing extracted data
 
     Examples:
-        >>> df = read_webpage("https://example.com/products", prompt="Extract product names and prices")
-        >>> df = read_webpage("https://news.com/article", columns=["title", "author", "date", "content"])
+        >>> df = read_webpage("https://example.com/products", prompt="Extract products")
+        >>> df = read_webpage("https://news.com/article", columns=["title", "author"])
     """
     try:
         import requests
@@ -259,25 +274,33 @@ def read_video(
     Args:
         filepath: Path to the video file
         prompt: Prompt describing what data to extract from the video
-        from_: Source(s) to extract from - 'pics' (frames), 'audios' (audio track), or 'both'
+        from_: Source(s) to extract from -
+            'pics' (frames), 'audios' (audio track), or 'both'
         columns: Optional list of column names to extract
-        api_key: Optional OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
-        model: Optional AI model to use (default: gpt-3.5-turbo)
+        api_key: Optional OpenRouter API key
+            (uses OPENROUTER_API_KEY env var if not provided)
+        model: Optional AI model to use
+            (default: gpt-3.5-turbo)
         sample_rate: Frame sampling rate (extract 1 frame per N frames)
 
     Returns:
         pandas DataFrame containing extracted data
 
     Examples:
-        >>> df = read_video("presentation.mp4", prompt="Extract slide titles and key points", from_="pics")
-        >>> df = read_video("lecture.mp4", from_="audios", columns=["speaker", "topic"])
+        >>> df = read_video(
+        ...     "presentation.mp4",
+        ...     prompt="Extract slide titles",
+        ...     from_="pics"
+        ... )
+        >>> df = read_video("lecture.mp4", from_="audios")
         >>> df = read_video("interview.mp4", from_="both")
     """
     try:
         import cv2
     except ImportError:
         raise ImportError(
-            "opencv-python is required for read_video. Install it with: pip install opencv-python"
+            "opencv-python is required for read_video. "
+            "Install it with: pip install opencv-python"
         )
 
     filepath = Path(filepath)
@@ -316,7 +339,7 @@ def read_video(
         content += f"Total frames: {frame_count}\n"
 
         if "pics" in from_:
-            content += f"\n--- Frame Analysis ---\n"
+            content += "\n--- Frame Analysis ---\n"
             content += f"Sampling every {sample_rate} frames\n"
 
             # Sample frames from the video
@@ -328,7 +351,8 @@ def read_video(
                 if not ret:
                     break
 
-                # Basic frame description (in a real implementation, you'd use OCR or vision models)
+                # Basic frame description
+                # (in a real implementation, use OCR or vision models)
                 timestamp = frame_idx / fps if fps > 0 else 0
                 frame_descriptions.append(f"Frame at {timestamp:.2f}s")
 
@@ -342,8 +366,11 @@ def read_video(
                 content += f"\n... and {len(frame_descriptions) - 10} more frames"
 
         if "audios" in from_:
-            content += f"\n\n--- Audio Analysis ---\n"
-            content += "[Note: Full audio extraction requires additional audio processing services]\n"
+            content += "\n\n--- Audio Analysis ---\n"
+            content += (
+                "[Note: Full audio extraction requires "
+                "additional audio processing services]\n"
+            )
 
         video.release()
 
