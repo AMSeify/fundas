@@ -175,9 +175,7 @@ class TestReadImage:
             tmp_path = tmp.name
 
         try:
-            read_image(
-                tmp_path, model="anthropic/claude-3-opus", api_key="test-key"
-            )
+            read_image(tmp_path, model="anthropic/claude-3-opus", api_key="test-key")
 
             mock_get_client.assert_called_once_with(
                 "test-key", "anthropic/claude-3-opus"
