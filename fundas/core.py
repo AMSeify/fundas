@@ -34,19 +34,24 @@ class OpenRouterClient:
         Initialize OpenRouter client.
 
         Args:
-            api_key: OpenRouter API key. If not provided, reads from OPENROUTER_API_KEY env variable.
-            model: The AI model to use for processing. If not provided, reads from OPENROUTER_MODEL env variable.
-                   Default is openai/gpt-3.5-turbo.
-            use_cache: Whether to use caching for API responses. Default is True.
-            cache_ttl: Cache time-to-live in seconds. Default is 86400 (24 hours).
-            max_retries: Maximum number of retries for failed API calls. Default is 3.
+            api_key: OpenRouter API key. If not provided, reads from
+                OPENROUTER_API_KEY env variable.
+            model: The AI model to use for processing. If not provided,
+                reads from OPENROUTER_MODEL env variable.
+                Default is openai/gpt-3.5-turbo.
+            use_cache: Whether to use caching for API responses.
+                Default is True.
+            cache_ttl: Cache time-to-live in seconds.
+                Default is 86400 (24 hours).
+            max_retries: Maximum number of retries for failed API calls.
+                Default is 3.
             retry_delay: Delay between retries in seconds. Default is 1.
         """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key is required. Set OPENROUTER_API_KEY environment variable "
-                "or pass api_key parameter."
+                "OpenRouter API key is required. Set OPENROUTER_API_KEY "
+                "environment variable or pass api_key parameter."
             )
         self.model = model or os.environ.get("OPENROUTER_MODEL", "openai/gpt-3.5-turbo")
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"

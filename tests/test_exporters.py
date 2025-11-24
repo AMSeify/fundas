@@ -123,14 +123,20 @@ class TestToSummarizedExcel:
 
         try:
             # Should show warning since AI transformation not yet implemented
-            with pytest.warns(FutureWarning, match="AI-powered transformation is not yet implemented"):
+            with pytest.warns(
+                FutureWarning, match="AI-powered transformation is not yet implemented"
+            ):
                 to_summarized_excel(
-                    df, tmp_path, prompt="Add totals row", api_key="test-key", index=False
+                    df,
+                    tmp_path,
+                    prompt="Add totals row",
+                    api_key="test-key",
+                    index=False,
                 )
 
             # Verify file was created despite warning
             assert Path(tmp_path).exists()
-            
+
             # Verify the original data was saved
             result_df = pd.read_excel(tmp_path)
             assert len(result_df) == 2
