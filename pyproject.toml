@@ -32,6 +32,7 @@ dependencies = [
     "beautifulsoup4>=4.9.0",
     "opencv-python>=4.8.1.78",
     "python-dotenv>=1.0.0",
+    "openpyxl>=3.0.0",
 ]
 
 [project.optional-dependencies]
@@ -40,9 +41,6 @@ dev = [
     "pytest-cov>=3.0.0",
     "black>=22.0.0",
     "flake8>=4.0.0",
-]
-excel = [
-    "openpyxl>=3.0.0",
 ]
 
 [project.urls]
