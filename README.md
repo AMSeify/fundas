@@ -3,7 +3,7 @@
 **Fun**damental **Da**ta **S**ource - An AI-powered Python library that extends pandas to import and analyze complex, unstructured files.
 
 [![Tests](https://github.com/AMSeify/fundas/actions/workflows/test.yml/badge.svg)](https://github.com/AMSeify/fundas/actions/workflows/test.yml)
-[![PyPI version](https://badge.fury.io/py/fundas.svg)](https://badge.fury.io/py/fundas)
+[![PyPI version](https://badge.fury.io/py/fundas-ai.svg)](https://badge.fury.io/py/fundas-ai)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -24,7 +24,7 @@ All functions return pandas DataFrames, making the data ready for immediate anal
 ## Installation
 
 ```bash
-pip install fundas
+pip install fundas-ai
 ```
 
 Or install from source:

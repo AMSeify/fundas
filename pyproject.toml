@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fundas"
+name = "fundas-ai"
 dynamic = ["version"]
 description = "AI-powered Python library that extends pandas to import and analyze complex, unstructured files"
 readme = "README.md"
