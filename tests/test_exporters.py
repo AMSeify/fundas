@@ -63,34 +63,25 @@ class TestToSummarizedCsv:
             if Path(tmp_path).exists():
                 os.unlink(tmp_path)
 
-    @patch("fundas.exporters._get_client")
-    def test_csv_export_with_prompt(self, mock_get_client):
-        """Test CSV export with AI summarization."""
+    def test_csv_export_with_prompt(self):
+        """Test CSV export with prompt (currently shows warning)."""
         df = pd.DataFrame({"name": ["Alice", "Bob"], "age": [25, 30]})
-
-        mock_client = Mock()
-        mock_response = {
-            "choices": [{"message": {"content": "Transform data suggestion"}}]
-        }
-        mock_client.process_content.return_value = mock_response
-        mock_get_client.return_value = mock_client
 
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode="w") as tmp:
             tmp_path = tmp.name
 
         try:
-            to_summarized_csv(
-                df,
-                tmp_path,
-                prompt="Summarize by category",
-                api_key="test-key",
-                index=False,
-            )
+            # Should warn about unimplemented feature
+            with pytest.warns(FutureWarning, match="not yet implemented"):
+                to_summarized_csv(
+                    df,
+                    tmp_path,
+                    prompt="Summarize by category",
+                    api_key="test-key",
+                    index=False,
+                )
 
-            # Verify API was called
-            mock_client.process_content.assert_called_once()
-
-            # Verify file was created
+            # Verify file was created (with original data)
             assert Path(tmp_path).exists()
         finally:
             if Path(tmp_path).exists():
@@ -177,30 +168,21 @@ class TestToSummarizedJson:
             if Path(tmp_path).exists():
                 os.unlink(tmp_path)
 
-    @patch("fundas.exporters._get_client")
-    def test_json_export_with_prompt(self, mock_get_client):
-        """Test JSON export with AI summarization."""
+    def test_json_export_with_prompt(self):
+        """Test JSON export with prompt (currently shows warning)."""
         df = pd.DataFrame({"id": [1, 2], "value": [100, 200]})
-
-        mock_client = Mock()
-        mock_response = {
-            "choices": [{"message": {"content": "Transform data suggestion"}}]
-        }
-        mock_client.process_content.return_value = mock_response
-        mock_get_client.return_value = mock_client
 
         with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w") as tmp:
             tmp_path = tmp.name
 
         try:
-            to_summarized_json(
-                df, tmp_path, prompt="Nest by category", api_key="test-key"
-            )
+            # Should warn about unimplemented feature
+            with pytest.warns(FutureWarning, match="not yet implemented"):
+                to_summarized_json(
+                    df, tmp_path, prompt="Nest by category", api_key="test-key"
+                )
 
-            # Verify API was called
-            mock_client.process_content.assert_called_once()
-
-            # Verify file was created
+            # Verify file was created (with original data)
             assert Path(tmp_path).exists()
         finally:
             if Path(tmp_path).exists():

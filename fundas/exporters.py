@@ -29,48 +29,34 @@ def to_summarized_csv(
     **kwargs,
 ) -> None:
     """
-    Export DataFrame to CSV with optional AI-powered summarization.
+    Export DataFrame to CSV.
+
+    Note: AI-powered transformation is planned for future release.
+    Currently exports the DataFrame as-is.
 
     Args:
         df: DataFrame to export
         filepath: Path to save the CSV file
-        prompt: Optional prompt to transform/summarize the data before export
-        api_key: Optional OpenRouter API key
-        model: Optional AI model to use
+        prompt: Reserved for future AI transformation (not yet implemented)
+        api_key: Optional OpenRouter API key (not yet used)
+        model: Optional AI model to use (not yet used)
         **kwargs: Additional arguments passed to df.to_csv()
 
     Examples:
         >>> df = pd.DataFrame({"name": ["Alice", "Bob"], "score": [95, 87]})
         >>> to_summarized_csv(df, "output.csv")
-        >>>
-        >>> # With AI summarization
-        >>> to_summarized_csv(
-        ...     df,
-        ...     "summary.csv",
-        ...     prompt="Group by category and calculate averages"
-        ... )
     """
+    # TODO: Implement AI-powered transformation when prompt is provided
     if prompt:
-        # Use AI to transform the data
-        client = _get_client(api_key, model)
+        import warnings
 
-        # Convert DataFrame to string representation
-        df_str = df.to_string()
-
-        # Get transformation instructions from AI
-        system_prompt = (
-            "You are a data transformation assistant. "
-            "Analyze the provided data and suggest how to transform it based on the user's request. "
-            "Return your suggestion as a clear, actionable instruction."
+        warnings.warn(
+            "AI-powered transformation is not yet implemented. "
+            "DataFrame will be exported as-is.",
+            FutureWarning,
         )
 
-        response = client.process_content(df_str, prompt, system_prompt)
-
-        # For now, export the original data
-        # In a future enhancement, this could actually transform the data
-        df.to_csv(filepath, **kwargs)
-    else:
-        df.to_csv(filepath, **kwargs)
+    df.to_csv(filepath, **kwargs)
 
 
 def to_summarized_excel(
@@ -83,49 +69,35 @@ def to_summarized_excel(
     **kwargs,
 ) -> None:
     """
-    Export DataFrame to Excel with optional AI-powered summarization.
+    Export DataFrame to Excel.
+
+    Note: AI-powered transformation is planned for future release.
+    Currently exports the DataFrame as-is.
 
     Args:
         df: DataFrame to export
         filepath: Path to save the Excel file
-        prompt: Optional prompt to transform/summarize the data before export
+        prompt: Reserved for future AI transformation (not yet implemented)
         sheet_name: Name of the Excel sheet
-        api_key: Optional OpenRouter API key
-        model: Optional AI model to use
+        api_key: Optional OpenRouter API key (not yet used)
+        model: Optional AI model to use (not yet used)
         **kwargs: Additional arguments passed to df.to_excel()
 
     Examples:
         >>> df = pd.DataFrame({"product": ["A", "B"], "sales": [1000, 1500]})
         >>> to_summarized_excel(df, "output.xlsx")
-        >>>
-        >>> # With AI summarization
-        >>> to_summarized_excel(
-        ...     df,
-        ...     "summary.xlsx",
-        ...     prompt="Add a summary row with totals"
-        ... )
     """
+    # TODO: Implement AI-powered transformation when prompt is provided
     if prompt:
-        # Use AI to transform the data
-        client = _get_client(api_key, model)
+        import warnings
 
-        # Convert DataFrame to string representation
-        df_str = df.to_string()
-
-        # Get transformation instructions from AI
-        system_prompt = (
-            "You are a data transformation assistant. "
-            "Analyze the provided data and suggest how to transform it based on the user's request. "
-            "Return your suggestion as a clear, actionable instruction."
+        warnings.warn(
+            "AI-powered transformation is not yet implemented. "
+            "DataFrame will be exported as-is.",
+            FutureWarning,
         )
 
-        response = client.process_content(df_str, prompt, system_prompt)
-
-        # For now, export the original data
-        # In a future enhancement, this could actually transform the data
-        df.to_excel(filepath, sheet_name=sheet_name, **kwargs)
-    else:
-        df.to_excel(filepath, sheet_name=sheet_name, **kwargs)
+    df.to_excel(filepath, sheet_name=sheet_name, **kwargs)
 
 
 def to_summarized_json(
@@ -138,49 +110,35 @@ def to_summarized_json(
     **kwargs,
 ) -> None:
     """
-    Export DataFrame to JSON with optional AI-powered summarization.
+    Export DataFrame to JSON.
+
+    Note: AI-powered transformation is planned for future release.
+    Currently exports the DataFrame as-is.
 
     Args:
         df: DataFrame to export
         filepath: Path to save the JSON file
-        prompt: Optional prompt to transform/summarize the data before export
-        api_key: Optional OpenRouter API key
-        model: Optional AI model to use
+        prompt: Reserved for future AI transformation (not yet implemented)
+        api_key: Optional OpenRouter API key (not yet used)
+        model: Optional AI model to use (not yet used)
         orient: Format of JSON (see pandas.DataFrame.to_json)
         **kwargs: Additional arguments passed to df.to_json()
 
     Examples:
         >>> df = pd.DataFrame({"id": [1, 2], "value": [100, 200]})
         >>> to_summarized_json(df, "output.json")
-        >>>
-        >>> # With AI summarization
-        >>> to_summarized_json(
-        ...     df,
-        ...     "summary.json",
-        ...     prompt="Convert to nested JSON structure"
-        ... )
     """
+    # TODO: Implement AI-powered transformation when prompt is provided
     if prompt:
-        # Use AI to transform the data
-        client = _get_client(api_key, model)
+        import warnings
 
-        # Convert DataFrame to string representation
-        df_str = df.to_string()
-
-        # Get transformation instructions from AI
-        system_prompt = (
-            "You are a data transformation assistant. "
-            "Analyze the provided data and suggest how to transform it based on the user's request. "
-            "Return your suggestion as a clear, actionable instruction."
+        warnings.warn(
+            "AI-powered transformation is not yet implemented. "
+            "DataFrame will be exported as-is.",
+            FutureWarning,
         )
 
-        response = client.process_content(df_str, prompt, system_prompt)
-
-        # For now, export the original data
-        # In a future enhancement, this could actually transform the data
-        df.to_json(filepath, orient=orient, **kwargs)
-    else:
-        df.to_json(filepath, orient=orient, **kwargs)
+    df.to_json(filepath, orient=orient, **kwargs)
 
 
 def summarize_dataframe(

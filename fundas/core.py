@@ -6,6 +6,8 @@ structured data from various file types.
 """
 
 import os
+import time
+import json
 import requests
 from typing import Dict, Any, Optional, List
 
@@ -108,8 +110,6 @@ class OpenRouterClient:
 
             # Wait before retry (except on last attempt)
             if attempt < self.max_retries - 1:
-                import time
-
                 time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
 
         # All retries failed
@@ -165,8 +165,6 @@ class OpenRouterClient:
             response_text = response["choices"][0]["message"]["content"]
 
             # Try to parse JSON from the response
-            import json
-
             try:
                 # Look for JSON in the response (it might be wrapped in markdown code blocks)
                 if "```json" in response_text:
