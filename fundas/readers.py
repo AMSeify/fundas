@@ -47,7 +47,7 @@ def read_pdf(
     try:
         from PyPDF2 import PdfReader
     except ImportError:
-        raise ImportError("PyPDF2 is required for read_pdf. Install it with: pip install pypdf2")
+        raise ImportError("PyPDF2 is required for read_pdf. Install it with: pip install PyPDF2")
     
     filepath = Path(filepath)
     if not filepath.exists():
@@ -94,18 +94,12 @@ def read_image(
         >>> df = read_image("chart.png", prompt="Extract data points from this chart")
         >>> df = read_image("receipt.jpg", prompt="Extract items and prices")
     """
-    try:
-        from PIL import Image
-        import pytesseract
-    except ImportError:
-        # If OCR not available, try without it
-        pass
-    
     filepath = Path(filepath)
     if not filepath.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
     
-    # Try to extract text from image using OCR
+    # Try to extract text from image using OCR if available
+    content = ""
     try:
         from PIL import Image
         import pytesseract
@@ -113,6 +107,9 @@ def read_image(
         content = pytesseract.image_to_string(image)
         if not content.strip():
             content = f"Image file: {filepath.name} (No text detected via OCR)"
+    except ImportError:
+        # OCR libraries not available
+        content = f"Image file: {filepath.name} (OCR not available - install pytesseract for text extraction)"
     except Exception:
         # Fallback: describe the image file
         content = f"Image file: {filepath.name}"
@@ -206,7 +203,10 @@ def read_webpage(
         import requests
         from bs4 import BeautifulSoup
     except ImportError:
-        raise ImportError("requests and beautifulsoup4 are required. Install with: pip install requests beautifulsoup4")
+        raise ImportError(
+            "requests and beautifulsoup4 are required. "
+            "Install with: pip install requests beautifulsoup4"
+        )
     
     # Fetch webpage content
     try:
