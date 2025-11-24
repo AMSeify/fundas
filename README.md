@@ -179,9 +179,9 @@ print(df.groupby('region')['sales'].sum())
 - pandas >= 1.3.0
 - requests >= 2.25.0
 - PyPDF2 >= 3.0.0
-- Pillow >= 9.0.0
+- Pillow >= 10.3.0
 - beautifulsoup4 >= 4.9.0
-- opencv-python >= 4.5.0
+- opencv-python >= 4.8.1.78
 
 ## API Reference
 
