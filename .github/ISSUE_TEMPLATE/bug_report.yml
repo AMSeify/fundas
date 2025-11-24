@@ -1,0 +1,90 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of what the bug is
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+      placeholder: What should have happened?
+    validations:
+      required: true
+  
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Import fundas
+        2. Call read_pdf(...)
+        3. See error
+    validations:
+      required: true
+  
+  - type: textarea
+    id: code
+    attributes:
+      label: Code sample
+      description: Minimal code to reproduce the issue
+      render: python
+      placeholder: |
+        import fundas
+        df = fundas.read_pdf("file.pdf", prompt="...")
+    validations:
+      required: false
+  
+  - type: input
+    id: version
+    attributes:
+      label: Fundas version
+      description: What version of Fundas are you using?
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: What version of Python are you using?
+      placeholder: "3.11"
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other context about the problem
+      placeholder: Add any other relevant information
+    validations:
+      required: false
