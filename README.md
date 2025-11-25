@@ -24,7 +24,7 @@ All functions return pandas DataFrames, making the data ready for immediate anal
 ## Installation
 
 ```bash
-pip install fundas-ai
+pip install fundas
 ```
 
 Or install from source:
