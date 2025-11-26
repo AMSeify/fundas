@@ -12,7 +12,6 @@ import fundas as fd
 from fundas import Schema, Column, DataType
 import os
 from dotenv import load_dotenv
-from datetime import date, datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,28 +24,33 @@ def test_schema_basic():
     print("=" * 60)
 
     # Using Column objects
-    schema1 = Schema([
-        Column("name", DataType.STRING, description="Product name"),
-        Column("price", DataType.FLOAT, description="Price in USD"),
-        Column("quantity", DataType.INTEGER, description="Stock quantity"),
-        Column("in_stock", DataType.BOOLEAN, description="Availability status"),
-    ])
+    schema1 = Schema(
+        [
+            Column("name", DataType.STRING, description="Product name"),
+            Column("price", DataType.FLOAT, description="Price in USD"),
+            Column("quantity", DataType.INTEGER, description="Stock quantity"),
+            Column("in_stock", DataType.BOOLEAN, description="Availability status"),
+        ]
+    )
     print(f"\nSchema 1: {schema1}")
     print(f"Column names: {schema1.get_column_names()}")
 
     # Using shorthand dict format
-    schema2 = Schema({
-        "name": "string",
-        "price": "float",
-        "quantity": "int",
-        "available": "bool",
-    })
+    schema2 = Schema(
+        {
+            "name": "string",
+            "price": "float",
+            "quantity": "int",
+            "available": "bool",
+        }
+    )
     print(f"\nSchema 2: {schema2}")
     print(f"Column names: {schema2.get_column_names()}")
 
     # Print JSON schema for API
     print("\nJSON Schema for API:")
     import json
+
     print(json.dumps(schema1.to_json_schema(), indent=2))
 
     print()
@@ -59,10 +63,13 @@ def test_webpage_with_schema():
     print("=" * 60)
 
     # Define schema for country data
-    schema = Schema([
-        Column("attribute", DataType.STRING, description="Country attribute name"),
-        Column("value", DataType.STRING, description="Attribute value"),
-    ], name="country_data")
+    schema = Schema(
+        [
+            Column("attribute", DataType.STRING, description="Country attribute name"),
+            Column("value", DataType.STRING, description="Attribute value"),
+        ],
+        name="country_data",
+    )
 
     url = "https://en.wikipedia.org/wiki/France"
     prompt = "Extract basic facts about France (capital, population, area, language)"
@@ -86,15 +93,28 @@ def test_webpage_with_numeric_schema():
     print("=" * 60)
 
     # Schema with different numeric types
-    schema = Schema([
-        Column("rank", DataType.INTEGER, description="Story rank position"),
-        Column("title", DataType.STRING, description="Story title"),
-        Column("points", DataType.INTEGER, description="Upvote points", nullable=True),
-        Column("comments", DataType.INTEGER, description="Number of comments", nullable=True),
-    ], name="hacker_news_stories")
+    schema = Schema(
+        [
+            Column("rank", DataType.INTEGER, description="Story rank position"),
+            Column("title", DataType.STRING, description="Story title"),
+            Column(
+                "points", DataType.INTEGER, description="Upvote points", nullable=True
+            ),
+            Column(
+                "comments",
+                DataType.INTEGER,
+                description="Number of comments",
+                nullable=True,
+            ),
+        ],
+        name="hacker_news_stories",
+    )
 
     url = "https://news.ycombinator.com/"
-    prompt = "Extract the top 10 stories with their ranks, titles, points, and comment counts"
+    prompt = (
+        "Extract the top 10 stories with their ranks, titles, "
+        "points, and comment counts"
+    )
 
     try:
         df = fd.read_webpage(url, prompt=prompt, schema=schema)
@@ -119,11 +139,18 @@ def test_webpage_with_date_schema():
     print("=" * 60)
 
     # Schema with date type
-    schema = Schema([
-        Column("title", DataType.STRING, description="Paper title"),
-        Column("authors", DataType.STRING, description="Paper authors"),
-        Column("submitted_date", DataType.DATE, description="Submission date (YYYY-MM-DD)"),
-    ], name="arxiv_papers")
+    schema = Schema(
+        [
+            Column("title", DataType.STRING, description="Paper title"),
+            Column("authors", DataType.STRING, description="Paper authors"),
+            Column(
+                "submitted_date",
+                DataType.DATE,
+                description="Submission date (YYYY-MM-DD)",
+            ),
+        ],
+        name="arxiv_papers",
+    )
 
     url = "https://arxiv.org/list/cs.AI/recent"
     prompt = "Extract recent AI papers with their titles, authors, and submission dates"
@@ -146,13 +173,23 @@ def test_webpage_with_float_schema():
     print("=" * 60)
 
     # Schema with float type for testing numeric conversion
-    schema = Schema([
-        Column("metric_name", DataType.STRING, description="Name of the metric"),
-        Column("metric_value", DataType.FLOAT, description="Numeric value", nullable=True),
-    ], name="metrics")
+    schema = Schema(
+        [
+            Column("metric_name", DataType.STRING, description="Name of the metric"),
+            Column(
+                "metric_value",
+                DataType.FLOAT,
+                description="Numeric value",
+                nullable=True,
+            ),
+        ],
+        name="metrics",
+    )
 
     url = "https://httpbin.org/json"
-    prompt = "Extract any key-value pairs from this JSON, treating numeric values as floats"
+    prompt = (
+        "Extract any key-value pairs from this JSON, treating numeric values as floats"
+    )
 
     try:
         df = fd.read_webpage(url, prompt=prompt, schema=schema)
@@ -172,10 +209,13 @@ def test_wikipedia_movie_with_schema():
     print("=" * 60)
 
     # Complex schema for movie data
-    schema = Schema([
-        Column("attribute", DataType.STRING, description="Movie attribute"),
-        Column("value", DataType.STRING, description="Attribute value"),
-    ], name="movie_info")
+    schema = Schema(
+        [
+            Column("attribute", DataType.STRING, description="Movie attribute"),
+            Column("value", DataType.STRING, description="Attribute value"),
+        ],
+        name="movie_info",
+    )
 
     url = "https://en.wikipedia.org/wiki/The_Matrix"
     prompt = (
@@ -201,12 +241,15 @@ def test_json_api_with_schema():
     print("=" * 60)
 
     # Schema for API data
-    schema = Schema([
-        Column("id", DataType.INTEGER, description="User ID"),
-        Column("name", DataType.STRING, description="User name"),
-        Column("email", DataType.STRING, description="Email address"),
-        Column("company", DataType.STRING, description="Company name"),
-    ], name="users")
+    schema = Schema(
+        [
+            Column("id", DataType.INTEGER, description="User ID"),
+            Column("name", DataType.STRING, description="User name"),
+            Column("email", DataType.STRING, description="Email address"),
+            Column("company", DataType.STRING, description="Company name"),
+        ],
+        name="users",
+    )
 
     url = "https://jsonplaceholder.typicode.com/users"
     prompt = "Extract user information with their ID, name, email, and company name"
@@ -234,12 +277,15 @@ def test_shorthand_schema():
     print("=" * 60)
 
     # Using dict shorthand for quick schema definition
-    schema = Schema({
-        "title": "string",
-        "year": "integer",
-        "rating": "float",
-        "available": "boolean",
-    })
+    # Note: This schema demonstrates the shorthand format
+    _ = Schema(
+        {
+            "title": "string",
+            "year": "integer",
+            "rating": "float",
+            "available": "boolean",
+        }
+    )
 
     url = "https://en.wikipedia.org/wiki/IMDB"
     prompt = "Extract information about IMDB (what it is, when founded, key facts)"
@@ -265,12 +311,22 @@ def test_nullable_columns():
     print("=" * 60)
 
     # Schema with nullable columns
-    schema = Schema([
-        Column("name", DataType.STRING, description="Item name"),
-        Column("price", DataType.FLOAT, description="Current price", nullable=True),
-        Column("discount_price", DataType.FLOAT, description="Discounted price if any", nullable=True),
-        Column("rating", DataType.FLOAT, description="User rating 1-5", nullable=True),
-    ], name="products")
+    schema = Schema(
+        [
+            Column("name", DataType.STRING, description="Item name"),
+            Column("price", DataType.FLOAT, description="Current price", nullable=True),
+            Column(
+                "discount_price",
+                DataType.FLOAT,
+                description="Discounted price if any",
+                nullable=True,
+            ),
+            Column(
+                "rating", DataType.FLOAT, description="User rating 1-5", nullable=True
+            ),
+        ],
+        name="products",
+    )
 
     url = "https://en.wikipedia.org/wiki/E-commerce"
     prompt = (
@@ -297,16 +353,19 @@ def test_enum_column():
     print("=" * 60)
 
     # Schema with enum constraint
-    schema = Schema([
-        Column("feature", DataType.STRING, description="Feature name"),
-        Column(
-            "status",
-            DataType.STRING,
-            description="Feature status",
-            enum_values=["stable", "beta", "experimental", "deprecated"]
-        ),
-        Column("version", DataType.STRING, description="Version introduced"),
-    ], name="features")
+    schema = Schema(
+        [
+            Column("feature", DataType.STRING, description="Feature name"),
+            Column(
+                "status",
+                DataType.STRING,
+                description="Feature status",
+                enum_values=["stable", "beta", "experimental", "deprecated"],
+            ),
+            Column("version", DataType.STRING, description="Version introduced"),
+        ],
+        name="features",
+    )
 
     url = "https://en.wikipedia.org/wiki/Python_(programming_language)"
     prompt = (
@@ -318,7 +377,10 @@ def test_enum_column():
         df = fd.read_webpage(url, prompt=prompt, schema=schema)
         print("\nExtracted Data:")
         print(df.head(10))
-        print(f"\nUnique status values: {df['status'].unique() if 'status' in df.columns else 'N/A'}")
+        if "status" in df.columns:
+            print(f"\nUnique status values: {df['status'].unique()}")
+        else:
+            print("\nUnique status values: N/A")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -400,7 +462,9 @@ def main():
     print("  all. Run all tests")
     print()
 
-    choice = input("Enter test number(s) separated by comma, or 'all': ").strip().lower()
+    choice = (
+        input("Enter test number(s) separated by comma, or 'all': ").strip().lower()
+    )
 
     if choice == "all":
         tests = range(1, 12)

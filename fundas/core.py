@@ -477,6 +477,230 @@ class OpenRouterClient:
 
         return {"content": ["No response from API"]}
 
+    def process_content_with_audio(
+        self,
+        audio_filepath: str,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        language: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Send audio content to OpenRouter API for processing.
+
+        This method sends audio files directly to audio-capable models
+        like google/gemini-2.5-flash via OpenRouter's input_audio content type.
+
+        Args:
+            audio_filepath: Path to the audio file (mp3, wav)
+            prompt: User prompt describing what to extract/transcribe
+            system_prompt: Optional system prompt to guide the AI
+            language: Optional language hint (e.g., "Persian", "English")
+
+        Returns:
+            Response from the API containing extracted data
+
+        Raises:
+            RuntimeError: If API communication fails after all retries
+            ValueError: If the model is not supported or request is invalid
+            FileNotFoundError: If the audio file doesn't exist
+        """
+        from pathlib import Path
+        import base64
+
+        filepath = Path(audio_filepath)
+        if not filepath.exists():
+            raise FileNotFoundError(f"Audio file not found: {audio_filepath}")
+
+        # Read and encode the audio file
+        with open(filepath, "rb") as f:
+            audio_data = f.read()
+        audio_base64 = base64.b64encode(audio_data).decode("utf-8")
+
+        # Determine format based on file extension (only wav and mp3 supported)
+        extension = filepath.suffix.lower().lstrip(".")
+        if extension not in ["wav", "mp3"]:
+            # Convert extension to supported format name
+            extension = "mp3"  # Default to mp3 for other formats
+
+        # Build prompt with language hint if provided
+        full_prompt = prompt
+        if language:
+            full_prompt = f"[Language: {language}] {prompt}"
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+
+        messages.append(
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": full_prompt},
+                    {
+                        "type": "input_audio",
+                        "input_audio": {"data": audio_base64, "format": extension},
+                    },
+                ],
+            }
+        )
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+        }
+
+        # Retry logic with longer timeout for audio
+        last_exception = None
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    self.base_url, headers=headers, json=payload, timeout=180
+                )
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.HTTPError as e:
+                if e.response and e.response.status_code == 400:
+                    error_msg = str(e)
+                    try:
+                        error_detail = e.response.json()
+                        error_msg = error_detail.get("error", {}).get("message", str(e))
+                    except Exception:
+                        pass
+                    raise ValueError(f"Invalid request: {error_msg}") from e
+                elif e.response and e.response.status_code == 401:
+                    raise ValueError("Invalid API key") from e
+                elif e.response and e.response.status_code == 404:
+                    raise ValueError(f"Model not found: {self.model}") from e
+                last_exception = e
+            except requests.exceptions.RequestException as e:
+                last_exception = e
+
+            if attempt < self.max_retries - 1:
+                time.sleep(self.retry_delay * (attempt + 1))
+
+        raise RuntimeError(
+            f"Error processing audio after {self.max_retries} attempts: "
+            f"{str(last_exception)}"
+        )
+
+    def extract_structured_data_from_audio(
+        self,
+        audio_filepath: str,
+        prompt: str,
+        columns: Optional[List[str]] = None,
+        language: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Extract structured data from audio using audio-capable models.
+
+        This method sends audio directly to models that support audio input
+        (like google/gemini-2.5-flash) and extracts structured data.
+
+        Args:
+            audio_filepath: Path to the audio file (mp3, wav)
+            prompt: User prompt describing what to extract
+            columns: Optional list of column names to extract
+            language: Optional language hint (e.g., "Persian", "Farsi", "English")
+
+        Returns:
+            Dictionary containing extracted structured data
+
+        Raises:
+            RuntimeError: If API communication fails
+            ValueError: If request parameters are invalid
+        """
+        # Check cache first
+        cache_key = f"audio:{audio_filepath}"
+        if self.use_cache and self.cache:
+            cached_data = self.cache.get(cache_key, prompt, self.model, columns)
+            if cached_data is not None:
+                return cached_data
+
+        system_prompt = (
+            "You are an audio transcription and data extraction assistant. "
+            "Listen to the audio carefully and extract structured data based on "
+            "the user's request. "
+            "Return it in a JSON format that can be easily converted "
+            "to a pandas DataFrame. "
+            "Each key should be a column name and each value should be "
+            "a list of values."
+        )
+
+        if columns:
+            system_prompt += f"\n\nExtract the following columns: {', '.join(columns)}"
+
+        full_prompt = (
+            f"{prompt}\n\n"
+            "Return the data as a JSON object where keys are column names "
+            "and values are lists. "
+            "If extracting single values, wrap them in a list. "
+            "For each distinct section or item, add a new element to each list. "
+            "Example format:\n"
+            '{"column1": ["value1", "value2"], "column2": ["value1", "value2"]}'
+        )
+
+        response = self.process_content_with_audio(
+            audio_filepath, full_prompt, system_prompt, language
+        )
+
+        # Extract the response text
+        if "choices" in response and len(response["choices"]) > 0:
+            response_text = response["choices"][0]["message"]["content"]
+
+            # Try to parse JSON from the response
+            try:
+                # Look for JSON in the response
+                if "```json" in response_text:
+                    json_start = response_text.find("```json") + 7
+                    json_end = response_text.find("```", json_start)
+                    json_str = response_text[json_start:json_end].strip()
+                elif "```" in response_text:
+                    json_start = response_text.find("```") + 3
+                    json_end = response_text.find("```", json_start)
+                    json_str = response_text[json_start:json_end].strip()
+                else:
+                    json_str = response_text.strip()
+
+                data = json.loads(json_str)
+
+                # Normalize data: ensure all arrays have the same length
+                if isinstance(data, dict):
+                    max_len = max(
+                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
+                        default=1,
+                    )
+                    normalized_data = {}
+                    for key, value in data.items():
+                        if isinstance(value, list):
+                            if len(value) < max_len:
+                                normalized_data[key] = value + [None] * (
+                                    max_len - len(value)
+                                )
+                            else:
+                                normalized_data[key] = value
+                        else:
+                            normalized_data[key] = [value] * max_len
+                    data = normalized_data
+
+                # Cache the result
+                if self.use_cache and self.cache:
+                    self.cache.set(cache_key, prompt, self.model, data, columns)
+
+                return data
+
+            except json.JSONDecodeError:
+                result = {"content": [response_text]}
+                if self.use_cache and self.cache:
+                    self.cache.set(cache_key, prompt, self.model, result, columns)
+                return result
+
+        return {"content": ["No response from API"]}
+
     def extract_structured_data_from_image(
         self, image_base64: str, prompt: str, columns: Optional[List[str]] = None
     ) -> Dict[str, Any]:

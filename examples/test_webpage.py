@@ -149,7 +149,9 @@ def test_github_repo():
             prompt=prompt,
             columns=columns,
             headers={
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept": (
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+                ),
             },
         )
         print("\nExtracted Data:")
@@ -474,7 +476,9 @@ def main():
     print("  all. Run all tests")
     print()
 
-    choice = input("Enter test number(s) separated by comma, or 'all': ").strip().lower()
+    choice = (
+        input("Enter test number(s) separated by comma, or 'all': ").strip().lower()
+    )
 
     if choice == "all":
         tests = range(1, 17)
@@ -516,4 +520,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

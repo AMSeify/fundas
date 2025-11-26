@@ -53,7 +53,8 @@ def main():
     print("# Read video file")
     print("df = fd.read_video('video.mp4', prompt='Extract key scenes', from_='pics')")
     print(
-        "df = fd.read_video('video.mp4', prompt='Extract audio content', from_='audios')"
+        "df = fd.read_video("
+        "'video.mp4', prompt='Extract audio content', from_='audios')"
     )
     print("df = fd.read_video('video.mp4', prompt='Extract all content', from_='both')")
     print()

@@ -7,7 +7,6 @@ from the Ferguson Q4 FY24 earnings press release PDF.
 """
 
 import fundas as fd
-import pandas as pd
 from pathlib import Path
 
 
@@ -34,7 +33,10 @@ def main():
     try:
         df_financials = fd.read_pdf(
             pdf_path,
-            prompt="Extract quarterly financial metrics including revenue, operating income, and earnings per share for Q4 2024",
+            prompt=(
+                "Extract quarterly financial metrics including revenue, "
+                "operating income, and earnings per share for Q4 2024"
+            ),
             columns=["metric", "q4_2024", "q4_2023", "change_percent"],
         )
         print(df_financials.to_string(index=False))
@@ -49,7 +51,10 @@ def main():
     try:
         df_highlights = fd.read_pdf(
             pdf_path,
-            prompt="Extract key business highlights and achievements mentioned in the press release",
+            prompt=(
+                "Extract key business highlights and achievements "
+                "mentioned in the press release"
+            ),
             columns=["category", "highlight"],
         )
         print(df_highlights.to_string(index=False))
@@ -64,7 +69,10 @@ def main():
     try:
         df_quotes = fd.read_pdf(
             pdf_path,
-            prompt="Extract executive quotes with the speaker's name and their statement",
+            prompt=(
+                "Extract executive quotes with the speaker's name "
+                "and their statement"
+            ),
         )
         print(df_quotes.to_string(index=False))
         print()

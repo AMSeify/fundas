@@ -75,7 +75,10 @@ def test_direct_mode():
     try:
         df = fd.read_image(
             "test_images/Photo_describeing_sample.png",
-            prompt="Describe the scene in detail. What is the robot doing? What's the atmosphere?",
+            prompt=(
+                "Describe the scene in detail. "
+                "What is the robot doing? What's the atmosphere?"
+            ),
             mode="direct",
             model="openai/gpt-5-mini",  # Multimodal model
         )
@@ -89,7 +92,10 @@ def test_direct_mode():
     try:
         df = fd.read_image(
             "test_images/Photo_describeing_sample.png",
-            prompt="Extract the following details: objects visible, colors, mood/atmosphere, season",
+            prompt=(
+                "Extract the following details: objects visible, "
+                "colors, mood/atmosphere, season"
+            ),
             columns=["object", "description"],
             mode="direct",
             model="openai/gpt-5-mini",

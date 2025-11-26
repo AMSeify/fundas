@@ -37,7 +37,7 @@ def test_pdf_structure():
 
         reader = PdfReader(str(pdf_path))
         num_pages = len(reader.pages)
-        print(f"✓ PDF opened successfully")
+        print("✓ PDF opened successfully")
         print(f"  Pages: {num_pages}")
 
         # Extract first page text as sample
