@@ -16,7 +16,7 @@ Main functions:
     - summarize_dataframe: Generate AI summary of a DataFrame
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .readers import (
     read_pdf,
