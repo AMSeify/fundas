@@ -336,7 +336,8 @@ class OpenRouterClient:
 
         system_prompt = (
             "You are a data extraction assistant. "
-            "Analyze the image and extract structured data based on the user's request. "
+            "Analyze the image and extract structured data based on "
+            "the user's request. "
             "Return it in a JSON format that can be easily converted "
             "to a pandas DataFrame. "
             "Each key should be a column name and each value should be "

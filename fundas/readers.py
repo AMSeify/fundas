@@ -96,7 +96,8 @@ def read_image(
             gpt-5-mini recommended for direct mode)
         mode: Extraction mode - "ocr" (extract text via OCR then send to LLM) or
             "direct" (send image directly to vision-capable LLM)
-        language: Language code for OCR (default: "eng"). Examples: "eng", "ara", "fas", "spa"
+        language: Language code for OCR (default: "eng").
+            Examples: "eng", "ara", "fas", "spa".
             Only used when mode="ocr".
             See pytesseract documentation for full list.
 
