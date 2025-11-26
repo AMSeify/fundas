@@ -9,10 +9,13 @@ import os
 import time
 import json
 import requests
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from dotenv import load_dotenv
 
 from .cache import get_cache
+
+if TYPE_CHECKING:
+    from .schema import Schema
 
 # Load environment variables from .env file
 load_dotenv()
@@ -61,7 +64,11 @@ class OpenRouterClient:
         self.retry_delay = retry_delay
 
     def process_content(
-        self, content: str, prompt: str, system_prompt: Optional[str] = None
+        self,
+        content: str,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Send content to OpenRouter API for processing.
@@ -70,6 +77,8 @@ class OpenRouterClient:
             content: The content to process (text, description, etc.)
             prompt: User prompt describing what to extract
             system_prompt: Optional system prompt to guide the AI
+            response_format: Optional response format for structured outputs
+                (e.g., {"type": "json_schema", "json_schema": {...}})
 
         Returns:
             Response from the API containing extracted data
@@ -96,6 +105,10 @@ class OpenRouterClient:
             "model": self.model,
             "messages": messages,
         }
+
+        # Add response_format for structured outputs if provided
+        if response_format:
+            payload["response_format"] = response_format
 
         # Retry logic
         last_exception = None
@@ -306,6 +319,160 @@ class OpenRouterClient:
                 if self.use_cache and self.cache:
                     self.cache.set(content, prompt, self.model, result, columns)
 
+                return result
+
+        return {"content": ["No response from API"]}
+
+    def extract_structured_data_with_schema(
+        self,
+        content: str,
+        prompt: str,
+        schema: "Schema",
+        use_strict_schema: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Extract structured data using a defined schema with type enforcement.
+
+        This method uses OpenRouter's structured outputs feature to ensure
+        responses conform to the specified JSON Schema and converts values
+        to the appropriate Python types.
+
+        Args:
+            content: The content to analyze
+            prompt: User prompt describing what to extract
+            schema: Schema object defining columns and their types
+            use_strict_schema: Whether to use strict schema mode (default: True)
+                Set to False for models that don't support structured outputs
+
+        Returns:
+            Dictionary containing extracted and type-converted structured data
+
+        Raises:
+            RuntimeError: If API communication fails
+            ValueError: If request parameters are invalid
+
+        Examples:
+            >>> from fundas.schema import Schema, Column, DataType
+            >>> schema = Schema([
+            ...     Column("name", DataType.STRING),
+            ...     Column("price", DataType.FLOAT),
+            ...     Column("quantity", DataType.INTEGER),
+            ... ])
+            >>> data = client.extract_structured_data_with_schema(
+            ...     content, prompt, schema
+            ... )
+        """
+        # Get column names from schema
+        columns = schema.get_column_names()
+
+        # Check cache first (include schema name in cache key)
+        cache_key_columns = columns + [f"__schema:{schema.name}"]
+        if self.use_cache and self.cache:
+            cached_data = self.cache.get(content, prompt, self.model, cache_key_columns)
+            if cached_data is not None:
+                # Apply type conversion even for cached data
+                return schema.convert_data(cached_data)
+
+        system_prompt = (
+            "You are a data extraction assistant. "
+            "Extract structured data from the provided content "
+            "and return it as a valid JSON object. "
+            "Each key should be a column name and each value should be "
+            "an array of values for that column."
+        )
+
+        # Add column descriptions if available
+        col_descriptions = []
+        for col in schema.columns:
+            desc = f"- {col.name} ({col.dtype.value})"
+            if col.description:
+                desc += f": {col.description}"
+            col_descriptions.append(desc)
+
+        system_prompt += (
+            "\n\nExtract these columns with specified types:\n"
+            + "\n".join(col_descriptions)
+        )
+
+        full_prompt = (
+            f"{prompt}\n\n"
+            "Return the data as a JSON object where keys are column names "
+            "and values are arrays. Ensure values match the specified types. "
+            "For dates, use ISO format (YYYY-MM-DD). "
+            "For datetime, use ISO 8601 format."
+        )
+
+        # Prepare response_format for structured outputs
+        response_format = None
+        if use_strict_schema:
+            response_format = schema.to_response_format()
+
+        try:
+            response = self.process_content(
+                content, full_prompt, system_prompt, response_format
+            )
+        except ValueError as e:
+            # If structured output fails (model doesn't support it),
+            # fall back to regular extraction
+            if "Invalid request" in str(e) or "400" in str(e):
+                response = self.process_content(content, full_prompt, system_prompt)
+            else:
+                raise
+
+        # Extract the response text
+        if "choices" in response and len(response["choices"]) > 0:
+            response_text = response["choices"][0]["message"]["content"]
+
+            # Try to parse JSON from the response
+            try:
+                # Look for JSON in the response
+                if "```json" in response_text:
+                    json_start = response_text.find("```json") + 7
+                    json_end = response_text.find("```", json_start)
+                    json_str = response_text[json_start:json_end].strip()
+                elif "```" in response_text:
+                    json_start = response_text.find("```") + 3
+                    json_end = response_text.find("```", json_start)
+                    json_str = response_text[json_start:json_end].strip()
+                else:
+                    json_str = response_text.strip()
+
+                data = json.loads(json_str)
+
+                # Normalize data: ensure all arrays have the same length
+                if isinstance(data, dict):
+                    max_len = max(
+                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
+                        default=1,
+                    )
+                    normalized_data = {}
+                    for key, value in data.items():
+                        if isinstance(value, list):
+                            if len(value) < max_len:
+                                normalized_data[key] = value + [None] * (
+                                    max_len - len(value)
+                                )
+                            else:
+                                normalized_data[key] = value
+                        else:
+                            normalized_data[key] = [value] * max_len
+                    data = normalized_data
+
+                # Cache the raw result (before type conversion)
+                if self.use_cache and self.cache:
+                    self.cache.set(content, prompt, self.model, data, cache_key_columns)
+
+                # Apply type conversion from schema
+                converted_data = schema.convert_data(data)
+
+                return converted_data
+
+            except json.JSONDecodeError:
+                result = {"content": [response_text]}
+                if self.use_cache and self.cache:
+                    self.cache.set(
+                        content, prompt, self.model, result, cache_key_columns
+                    )
                 return result
 
         return {"content": ["No response from API"]}

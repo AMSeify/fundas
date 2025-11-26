@@ -374,7 +374,7 @@ class TestReadAudio:
 class TestReadWebpage:
     """Tests for read_webpage function."""
 
-    @patch("requests.get")
+    @patch("requests.Session.get")
     @patch("fundas.readers._get_client")
     def test_read_webpage_success(self, mock_get_client, mock_get):
         """Test successful webpage reading."""
@@ -382,6 +382,7 @@ class TestReadWebpage:
         mock_response.content = (
             b"<html><body><h1>Title</h1><p>Content</p></body></html>"
         )
+        mock_response.status_code = 200
         mock_response.raise_for_status = Mock()
         mock_get.return_value = mock_response
 
@@ -399,7 +400,7 @@ class TestReadWebpage:
         mock_get.assert_called_once()
         mock_client.extract_structured_data.assert_called_once()
 
-    @patch("requests.get")
+    @patch("requests.Session.get")
     def test_read_webpage_request_error(self, mock_get):
         """Test handling of webpage request errors."""
         mock_get.side_effect = Exception("Network error")
@@ -407,7 +408,7 @@ class TestReadWebpage:
         with pytest.raises(RuntimeError, match="Error fetching webpage"):
             read_webpage("https://example.com", api_key="test-key")
 
-    @patch("requests.get")
+    @patch("requests.Session.get")
     @patch("fundas.readers._get_client")
     def test_read_webpage_with_columns(self, mock_get_client, mock_get):
         """Test webpage reading with specified columns."""

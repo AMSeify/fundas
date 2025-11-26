@@ -14,6 +14,11 @@ Main functions:
     - to_summarized_excel: Export DataFrame to Excel with AI summarization
     - to_summarized_json: Export DataFrame to JSON with AI summarization
     - summarize_dataframe: Generate AI summary of a DataFrame
+
+Schema classes:
+    - Schema: Define output structure with typed columns
+    - Column: Define a column with specific data type
+    - DataType: Enum of supported data types (STRING, INTEGER, FLOAT, etc.)
 """
 
 __version__ = "0.1.1"
@@ -35,6 +40,7 @@ from .exporters import (
 
 from .core import OpenRouterClient
 from .cache import get_cache, APICache
+from .schema import Schema, Column, DataType
 
 __all__ = [
     "read_pdf",
@@ -49,4 +55,7 @@ __all__ = [
     "OpenRouterClient",
     "get_cache",
     "APICache",
+    "Schema",
+    "Column",
+    "DataType",
 ]
