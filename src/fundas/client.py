@@ -383,9 +383,7 @@ class OpenRouterClient:
             else:
                 # Cache even the fallback result
                 if self.use_cache and self.cache:
-                    self.cache.set(
-                        content, prompt, self.model, data, cache_key_columns
-                    )
+                    self.cache.set(content, prompt, self.model, data, cache_key_columns)
                 return data
 
         return {"content": ["No response from API"]}
