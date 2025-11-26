@@ -30,11 +30,11 @@ jobs:
     
     - name: Lint with flake8
       run: |
-        flake8 fundas/ tests/ --max-line-length=88 --extend-ignore=E203 --count --show-source --statistics
+        flake8 src/fundas/ tests/ --max-line-length=88 --extend-ignore=E203 --count --show-source --statistics
     
     - name: Check formatting with black
       run: |
-        black --check fundas/ tests/
+        black --check src/fundas/ tests/
     
     - name: Run tests with coverage
       run: |
