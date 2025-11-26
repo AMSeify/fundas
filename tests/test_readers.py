@@ -175,7 +175,11 @@ class TestReadImage:
             tmp_path = tmp.name
 
         try:
-            read_image(tmp_path, model="anthropic/claude-3-opus", api_key="test-key")
+            read_image(
+                tmp_path,
+                model="anthropic/claude-3-opus",
+                api_key="test-key",
+            )
 
             mock_get_client.assert_called_once_with(
                 "test-key", "anthropic/claude-3-opus"
@@ -425,7 +429,9 @@ class TestReadWebpage:
         mock_get_client.return_value = mock_client
 
         read_webpage(
-            "https://example.com", columns=["title", "author"], api_key="test-key"
+            "https://example.com",
+            columns=["title", "author"],
+            api_key="test-key",
         )
 
         call_args = mock_client.extract_structured_data.call_args

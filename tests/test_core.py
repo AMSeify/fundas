@@ -62,7 +62,9 @@ class TestOpenRouterClient:
 
         client = OpenRouterClient(api_key="test-key")
         result = client.process_content(
-            "test content", "test prompt", system_prompt="test system prompt"
+            "test content",
+            "test prompt",
+            system_prompt="test system prompt",
         )
 
         # Check that post was called with correct structure

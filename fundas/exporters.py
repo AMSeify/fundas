@@ -171,7 +171,8 @@ def summarize_dataframe(
 
     system_prompt = (
         "You are a data analysis assistant. "
-        "Provide a clear, concise summary of the data based on the user's request."
+        "Provide a clear, concise summary of the data based on the user's "
+        "request."
     )
 
     response = client.process_content(df_str, prompt, system_prompt)

@@ -12,7 +12,7 @@ from pathlib import Path
 from .core import OpenRouterClient
 
 if TYPE_CHECKING:
-    from .schema import Schema
+    from fundas.schema import Schema
 
 
 def _get_client(
@@ -101,8 +101,8 @@ def read_pdf(
         prompt: Prompt describing what data to extract
         columns: Optional list of column names to extract
         schema: Optional Schema object for structured output with type
-            enforcement. When provided, the output will have proper
-            data types (int, float, date, etc.)
+            enforcement. When provided, the output will have proper data
+            types (int, float, date, etc.)
         api_key: Optional OpenRouter API key
             (uses OPENROUTER_API_KEY env var if not provided)
         model: Optional AI model to use
@@ -113,7 +113,9 @@ def read_pdf(
 
     Examples:
         >>> df = read_pdf("invoice.pdf", prompt="Extract invoice items")
-        >>> df = read_pdf("report.pdf", columns=["date", "metric", "value"])
+        >>> df = read_pdf(
+        ...     "report.pdf", columns=["date", "metric", "value"]
+        ... )
         >>> # With schema for typed output
         >>> from fundas.schema import Schema, Column, DataType
         >>> schema = Schema([
@@ -187,16 +189,23 @@ def read_image(
 
     Examples:
         >>> # OCR mode (default) - extract text from image first
-        >>> df = read_image("chart.png", prompt="Extract data points from this chart")
         >>> df = read_image(
-        ...     "receipt.jpg", prompt="Extract items and prices", mode="ocr"
+        ...     "chart.png", prompt="Extract data points from this chart"
+        ... )
+        >>> df = read_image(
+        ...     "receipt.jpg",
+        ...     prompt="Extract items and prices",
+        ...     mode="ocr",
         ... )
         >>> df = read_image("arabic.png", mode="ocr", language="ara")
 
         >>> # Direct mode - send image directly to vision model
-        >>> df = read_image("photo.jpg", mode="direct",
-        ...                 model="openai/gpt-5-mini",
-        ...                 prompt="Describe the scene")
+        >>> df = read_image(
+        ...     "photo.jpg",
+        ...     mode="direct",
+        ...     model="openai/gpt-5-mini",
+        ...     prompt="Describe the scene",
+        ... )
 
         >>> # With schema for typed output
         >>> from fundas.schema import Schema, Column, DataType
@@ -259,13 +268,14 @@ def read_image(
             if not content.strip():
                 content = (
                     f"Image file: {filepath.name} "
-                    f"(No text detected via OCR with language={language})"
+                    f"(No text detected via OCR with language={language})",
                 )
         except ImportError:
             # OCR libraries not available
             content = (
                 f"Image file: {filepath.name} "
-                "(OCR not available - install pytesseract for text extraction)"
+                "(OCR not available - install pytesseract for text "
+                "extraction)"
             )
         except Exception as e:
             # Fallback: describe the image file
@@ -305,39 +315,31 @@ def read_audio(
     Read an audio file and convert it to a pandas DataFrame using AI extraction.
 
     This function supports two transcription methods:
-    1. Local Whisper (default): Uses OpenAI's Whisper model locally for transcription,
-       then sends text to LLM for structured extraction.
-    2. OpenRouter API (use_openrouter=True): Sends audio directly to audio-capable
-       models like google/gemini-2.5-flash for transcription and extraction in one step.
 
-    Supports MP3 and WAV formats for OpenRouter, and additional formats (FLAC, OGG,
-    M4A, etc.) for local Whisper transcription.
+    1.  **Local Whisper (default)**: Uses OpenAI's Whisper model locally
+        for transcription, then sends text to an LLM for structured
+        extraction.
+    2.  **OpenRouter API (`use_openrouter=True`)**: Sends audio directly
+        to audio-capable models like ``google/gemini-2.5-flash`` for
+        transcription and extraction in one step.
+
+    Supports MP3 and WAV formats for OpenRouter, and additional formats (FLAC,
+    OGG, M4A, etc.) for local Whisper transcription.
 
     Args:
-        filepath: Path to the audio file
-            - For OpenRouter: mp3, wav supported
-            - For local Whisper: mp3, wav, flac, ogg, m4a, and more
-        prompt: Prompt describing what data to extract from the audio
-        columns: Optional list of column names to extract
-        schema: Optional Schema object for structured output with type enforcement
-        api_key: Optional OpenRouter API key
-            (uses OPENROUTER_API_KEY env var if not provided)
+        filepath: Path to the audio file.
+        prompt: Prompt describing what data to extract from the audio.
+        columns: Optional list of column names to extract.
+        schema: Optional :class:`~fundas.schema.Schema` object for structured
+            output with type enforcement.
+        api_key: Optional OpenRouter API key.
         model: Optional AI model to use.
-            - For OpenRouter audio: use audio-capable models
-              like "google/gemini-2.5-flash"
-            - For local Whisper + LLM: default is "openai/gpt-3.5-turbo"
         language: Language specification for better accuracy.
-            - For OpenRouter: use full name like "Persian", "Farsi",
-              "English", "Arabic"
-            - For local Whisper: use ISO codes like "fa", "en", "ar", "es"
-            Common language codes: "en" (English), "fa" (Persian/Farsi),
-            "ar" (Arabic), "es" (Spanish), "fr" (French), "de" (German),
-            "zh" (Chinese)
-        whisper_model: Whisper model size for local transcription
-            (ignored if use_openrouter=True).
-            Options: "tiny", "base", "small", "medium", "large",
-            "large-v2", "large-v3"
-            Default: "base". Use "medium" or "large" for non-English.
+        whisper_model: Whisper model size for local transcription (e.g.,
+            "base", "medium", "large").
+        device: Device to run local Whisper on ("cuda", "cpu").
+        use_openrouter: If ``True``, sends audio directly to OpenRouter.
+            This is recommended for non-English languages.
         device: Device to run local Whisper on ("cuda", "cpu", or None).
             Use "cpu" if you encounter GPU memory issues.
         use_openrouter: If True, send audio directly to OpenRouter.
@@ -366,21 +368,23 @@ def read_audio(
         >>> # Persian audio with OpenRouter (recommended for non-English)
         >>> df = read_audio(
         ...     "persian_song.mp3",
-        ...     prompt="Extract each verse with artist name (Ebi, Shadmehr, etc.)",
+        ...     prompt="Extract each verse with artist name (Ebi, "
+        ...     "Shadmehr, etc.)",
         ...     columns=["verse_number", "artist", "lyrics"],
         ...     language="Persian",  # Full language name for OpenRouter
         ...     use_openrouter=True,
-        ...     model="google/gemini-2.5-flash"  # Audio-capable model
+        ...     model="google/gemini-2.5-flash",  # Audio-capable model
         ... )
 
         >>> # Extract song information into multiple rows
         >>> df = read_audio(
         ...     "music.mp3",
-        ...     prompt="Extract each song/verse as a separate row with artist name",
+        ...     prompt="Extract each song/verse as a separate row with "
+        ...     "artist name",
         ...     columns=["artist", "lyrics", "verse_number"],
         ...     language="Farsi",
         ...     use_openrouter=True,
-        ...     model="google/gemini-2.5-flash"
+        ...     model="google/gemini-2.5-flash",
         ... )
     """
     filepath = Path(filepath)
@@ -406,9 +410,9 @@ def read_audio(
         except Exception as e:
             raise RuntimeError(
                 f"Error processing audio with OpenRouter: {str(e)}. "
-                f"Make sure you're using an audio-capable model like "
-                f"'google/gemini-2.5-flash'. Check supported models at: "
-                f"https://openrouter.ai/models?input_modalities=audio"
+                "Make sure you're using an audio-capable model like "
+                "'google/gemini-2.5-flash'. Check supported models at: "
+                "https://openrouter.ai/models?input_modalities=audio"
             ) from e
 
     else:
@@ -462,7 +466,8 @@ def read_audio(
 
         except ImportError:
             transcription = (
-                "[Whisper not installed. Install with: pip install openai-whisper]\n"
+                "[Whisper not installed. Install with: pip install "
+                "openai-whisper]\n"
                 "[Note: You may also need ffmpeg installed on your system]\n"
                 "[Alternatively, use use_openrouter=True with an audio model]"
             )
@@ -514,8 +519,8 @@ def read_webpage(
             (default: gpt-3.5-turbo)
         headers: Optional custom headers dict to override defaults
         cookies: Optional cookies dict to send with the request
-        proxy: Optional proxy URL (e.g., "http://user:pass@proxy.com:8080"
-            or "socks5://proxy.com:1080")
+        proxy: Optional proxy URL (e.g.,
+            "http://user:pass@proxy.com:8080" or "socks5://proxy.com:1080")
         payload: Optional payload for POST/PUT requests (dict or form data)
         method: HTTP method - "GET", "POST", "PUT", etc. (default: "GET")
         timeout: Request timeout in seconds (default: 30)
@@ -531,12 +536,16 @@ def read_webpage(
         pandas DataFrame containing extracted data with proper types if schema provided
 
     Examples:
-        >>> df = read_webpage("https://example.com/products", prompt="Extract products")
-        >>> df = read_webpage("https://news.com/article", columns=["title", "author"])
+        >>> df = read_webpage(
+        ...     "https://example.com/products", prompt="Extract products"
+        ... )
+        >>> df = read_webpage(
+        ...     "https://news.com/article", columns=["title", "author"]
+        ... )
         >>> df = read_webpage(
         ...     "https://api.example.com/data",
         ...     headers={"Authorization": "Bearer token123"},
-        ...     proxy="http://proxy.com:8080"
+        ...     proxy="http://proxy.com:8080",
         ... )
         >>> df = read_webpage(
         ...     "https://example.com/login",
@@ -611,7 +620,15 @@ def read_webpage(
         total=retry_count,
         backoff_factor=retry_delay,
         status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "TRACE"],
+        allowed_methods=[
+            "HEAD",
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS",
+            "TRACE",
+        ],
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("http://", adapter)
@@ -729,7 +746,8 @@ def read_webpage(
         except requests.exceptions.TooManyRedirects as e:
             last_error = (
                 f"Too many redirects: {str(e)}. "
-                "Try setting follow_redirects=False or increasing max_redirects"
+                "Try setting follow_redirects=False or increasing "
+                "max_redirects"
             )
             break  # Don't retry on redirect loops
 
@@ -797,7 +815,8 @@ def read_video(
         from_: Source(s) to extract from -
             'pics' (frames), 'audios' (audio track), or 'both'
         columns: Optional list of column names to extract
-        schema: Optional Schema object for structured output with type enforcement
+        schema: Optional Schema object for structured output with type
+            enforcement
         api_key: Optional OpenRouter API key
             (uses OPENROUTER_API_KEY env var if not provided)
         model: Optional AI model to use

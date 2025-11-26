@@ -14,9 +14,9 @@ def run_command(cmd, description):
     print(f"\n{'='*60}")
     print(f"🔍 {description}")
     print(f"{'='*60}")
-    
+
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    
+
     if result.returncode == 0:
         print(f"✅ {description} - PASSED")
         if result.stdout:
@@ -36,55 +36,58 @@ def main():
     print("\n" + "="*60)
     print("🚀 FUNDAS PRE-PUBLISH VALIDATION")
     print("="*60)
-    
+
     checks = []
-    
+
     # 1. Check if we're in the right directory
     if not Path("pyproject.toml").exists():
         print("❌ Error: pyproject.toml not found. Run this from the project root.")
         sys.exit(1)
-    
+
     # 2. Run tests
-    checks.append(run_command(
-        "pytest tests/ --cov=fundas --cov-report=term-missing",
-        "Running test suite"
-    ))
-    
+    checks.append(
+        run_command(
+            "pytest tests/ --cov=fundas --cov-report=term-missing",
+            "Running test suite",
+        )
+    )
+
     # 3. Check code formatting
-    checks.append(run_command(
-        "black --check fundas/ tests/",
-        "Checking code formatting with black"
-    ))
-    
+    checks.append(
+        run_command(
+            "black --check fundas/ tests/",
+            "Checking code formatting with black",
+        )
+    )
+
     # 4. Run linter
-    checks.append(run_command(
-        "flake8 fundas/ tests/ --max-line-length=88 --extend-ignore=E203 --count",
-        "Linting with flake8"
-    ))
-    
+    checks.append(
+        run_command(
+            "flake8 fundas/ tests/ --max-line-length=88 "
+            "--extend-ignore=E203 --count",
+            "Linting with flake8",
+        )
+    )
+
     # 5. Build package
-    checks.append(run_command(
-        "python -m build",
-        "Building distribution packages"
-    ))
-    
+    checks.append(run_command("python -m build", "Building distribution packages"))
+
     # 6. Check distribution
     if Path("dist").exists():
-        checks.append(run_command(
-            "twine check dist/*",
-            "Validating distribution packages"
-        ))
-    
+        checks.append(
+            run_command("twine check dist/*", "Validating distribution packages")
+        )
+
     # Summary
     print("\n" + "="*60)
     print("📊 VALIDATION SUMMARY")
     print("="*60)
-    
+
     passed = sum(checks)
     total = len(checks)
-    
+
     print(f"\nPassed: {passed}/{total}")
-    
+
     if passed == total:
         print("\n✅ All checks passed! Ready to publish.")
         print("\nNext steps:")
@@ -93,12 +96,12 @@ def main():
         print("3. Tag: git tag vX.Y.Z")
         print("4. Push: git push origin main --tags")
         print("5. Create release on GitHub")
-        
+
         # Clean up build artifacts
         print("\n🧹 Cleaning up build artifacts...")
         subprocess.run("rm -rf dist/ build/ *.egg-info", shell=True)
         print("✅ Cleanup complete")
-        
+
         return 0
     else:
         print("\n❌ Some checks failed. Please fix the issues before publishing.")

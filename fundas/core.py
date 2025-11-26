@@ -14,8 +14,10 @@ from dotenv import load_dotenv
 
 from .cache import get_cache
 
+import fundas
+
 if TYPE_CHECKING:
-    from .schema import Schema
+    from fundas.schema import Schema
 
 # Load environment variables from .env file
 load_dotenv()
@@ -93,7 +95,10 @@ class OpenRouterClient:
             messages.append({"role": "system", "content": system_prompt})
 
         messages.append(
-            {"role": "user", "content": f"{prompt}\n\nContent to analyze:\n{content}"}
+            {
+                "role": "user",
+                "content": f"{prompt}\n\nContent to analyze:\n{content}",
+            }
         )
 
         headers = {
@@ -137,7 +142,7 @@ class OpenRouterClient:
 
         # All retries failed
         raise RuntimeError(
-            f"Error communicating with OpenRouter API after "
+            "Error communicating with OpenRouter API after "
             f"{self.max_retries} attempts: {str(last_exception)}"
         )
 
@@ -327,7 +332,7 @@ class OpenRouterClient:
         self,
         content: str,
         prompt: str,
-        schema: "Schema",
+        schema: "fundas.schema.Schema",
         use_strict_schema: bool = True,
     ) -> Dict[str, Any]:
         """
@@ -559,7 +564,10 @@ class OpenRouterClient:
         for attempt in range(self.max_retries):
             try:
                 response = requests.post(
-                    self.base_url, headers=headers, json=payload, timeout=180
+                    self.base_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=180,
                 )
                 response.raise_for_status()
                 return response.json()

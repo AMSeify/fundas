@@ -124,7 +124,8 @@ class TestToSummarizedExcel:
         try:
             # Should show warning since AI transformation not yet implemented
             with pytest.warns(
-                FutureWarning, match="AI-powered transformation is not yet implemented"
+                FutureWarning,
+                match="AI-powered transformation is not yet implemented",
             ):
                 to_summarized_excel(
                     df,
@@ -204,7 +205,8 @@ class TestSummarizeDataframe:
             "choices": [
                 {
                     "message": {
-                        "content": "Region A has average sales of 125, Region B has 200"
+                        "content": "Region A has average sales of 125, "
+                        "Region B has 200"
                     }
                 }
             ]

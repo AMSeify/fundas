@@ -35,7 +35,8 @@ class Column:
         required: Whether this column is required (default: True)
         nullable: Whether null values are allowed (default: False)
         enum_values: Optional list of allowed values
-        date_format: Format string for date/datetime parsing (default: ISO format)
+        date_format: Format string for date/datetime parsing
+            (default: ISO format)
         array_item_type: For ARRAY type, the type of items in the array
         default: Default value if not provided
 
@@ -43,8 +44,14 @@ class Column:
         >>> Column("name", DataType.STRING, description="Person's full name")
         >>> Column("age", "integer", required=True)
         >>> Column("price", DataType.FLOAT, nullable=True)
-        >>> Column("created_at", DataType.DATETIME, date_format="%Y-%m-%d %H:%M:%S")
-        >>> Column("status", DataType.STRING, enum_values=["active", "inactive"])
+        >>> Column(
+        ...     "created_at",
+        ...     DataType.DATETIME,
+        ...     date_format="%Y-%m-%d %H:%M:%S",
+        ... )
+        >>> Column(
+        ...     "status", DataType.STRING, enum_values=["active", "inactive"]
+        ... )
     """
 
     def __init__(
