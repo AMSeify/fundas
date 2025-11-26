@@ -49,7 +49,7 @@ def with_retry(
                         on_retry(e, attempt)
                     # Wait before retry (except on last attempt)
                     if attempt < max_retries - 1:
-                        time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                        time.sleep(retry_delay * (attempt + 1))  # Linear backoff
 
             # All retries failed
             raise last_exception  # type: ignore

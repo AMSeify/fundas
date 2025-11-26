@@ -277,13 +277,11 @@ def test_shorthand_schema():
     print("=" * 60)
 
     # Using dict shorthand for quick schema definition
-    # Note: This schema demonstrates the shorthand format
-    _ = Schema(
+    shorthand_schema = Schema(
         {
-            "title": "string",
-            "year": "integer",
-            "rating": "float",
-            "available": "boolean",
+            "name": "string",
+            "founded": "integer",
+            "description": "string",
         }
     )
 
@@ -294,7 +292,7 @@ def test_shorthand_schema():
         df = fd.read_webpage(
             url,
             prompt=prompt,
-            columns=["topic", "description"],  # Falls back to columns if schema fails
+            schema=shorthand_schema,  # Use the shorthand schema
         )
         print("\nExtracted Data:")
         print(df.head(5))
