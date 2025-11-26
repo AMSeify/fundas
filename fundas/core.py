@@ -8,7 +8,6 @@ structured data from various file types.
 import os
 import time
 import json
-import base64
 import requests
 from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
@@ -60,74 +59,6 @@ class OpenRouterClient:
         self.cache = get_cache(ttl=cache_ttl) if use_cache else None
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-
-    def process_content(
-        self, content: str, prompt: str, system_prompt: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Send content to OpenRouter API for processing.
-
-        Args:
-            content: The content to process (text, description, etc.)
-            prompt: User prompt describing what to extract
-            system_prompt: Optional system prompt to guide the AI
-
-        Returns:
-            Response from the API containing extracted data
-
-        Raises:
-            RuntimeError: If API communication fails after all retries
-            ValueError: If the model is not supported or request is invalid
-        """
-        messages = []
-
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-
-        messages.append(
-            {"role": "user", "content": f"{prompt}\n\nContent to analyze:\n{content}"}
-        )
-
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        payload = {
-            "model": self.model,
-            "messages": messages,
-        }
-
-        # Retry logic
-        last_exception = None
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.post(
-                    self.base_url, headers=headers, json=payload, timeout=60
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.HTTPError as e:
-                # Check for specific error codes
-                if e.response and e.response.status_code == 400:
-                    raise ValueError(f"Invalid request: {str(e)}") from e
-                elif e.response and e.response.status_code == 401:
-                    raise ValueError("Invalid API key") from e
-                elif e.response and e.response.status_code == 404:
-                    raise ValueError(f"Model not found: {self.model}") from e
-                last_exception = e
-            except requests.exceptions.RequestException as e:
-                last_exception = e
-
-            # Wait before retry (except on last attempt)
-            if attempt < self.max_retries - 1:
-                time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
-
-        # All retries failed
-        raise RuntimeError(
-            f"Error communicating with OpenRouter API after "
-            f"{self.max_retries} attempts: {str(last_exception)}"
-        )
 
     def process_content(
         self, content: str, prompt: str, system_prompt: Optional[str] = None

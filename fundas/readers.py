@@ -92,11 +92,13 @@ def read_image(
         api_key: Optional OpenRouter API key
             (uses OPENROUTER_API_KEY env var if not provided)
         model: Optional AI model to use
-            (default: gpt-3.5-turbo for OCR mode, gpt-5-mini recommended for direct mode)
+            (default: gpt-3.5-turbo for OCR mode,
+            gpt-5-mini recommended for direct mode)
         mode: Extraction mode - "ocr" (extract text via OCR then send to LLM) or
             "direct" (send image directly to vision-capable LLM)
         language: Language code for OCR (default: "eng"). Examples: "eng", "ara", "fas", "spa"
-            Only used when mode="ocr". See pytesseract documentation for full list.
+            Only used when mode="ocr".
+            See pytesseract documentation for full list.
 
     Returns:
         pandas DataFrame containing extracted data
@@ -104,7 +106,9 @@ def read_image(
     Examples:
         >>> # OCR mode (default) - extract text from image first
         >>> df = read_image("chart.png", prompt="Extract data points from this chart")
-        >>> df = read_image("receipt.jpg", prompt="Extract items and prices", mode="ocr")
+        >>> df = read_image(
+        ...     "receipt.jpg", prompt="Extract items and prices", mode="ocr"
+        ... )
         >>> df = read_image("arabic.png", mode="ocr", language="ara")
 
         >>> # Direct mode - send image directly to vision model
@@ -161,7 +165,10 @@ def read_image(
             # Use language parameter for OCR
             content = pytesseract.image_to_string(image, lang=language)
             if not content.strip():
-                content = f"Image file: {filepath.name} (No text detected via OCR with language={language})"
+                content = (
+                    f"Image file: {filepath.name} "
+                    f"(No text detected via OCR with language={language})"
+                )
         except ImportError:
             # OCR libraries not available
             content = (
