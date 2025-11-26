@@ -6,7 +6,7 @@ including handling markdown-wrapped JSON and data normalization.
 """
 
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 def parse_json_from_response(response_text: str) -> Dict[str, Any]:

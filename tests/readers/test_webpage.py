@@ -5,8 +5,6 @@ Tests for fundas.readers.webpage module.
 import pytest
 import pandas as pd
 from unittest.mock import Mock, patch
-import tempfile
-import os
 
 from fundas.readers import read_webpage
 
