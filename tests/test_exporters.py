@@ -194,7 +194,7 @@ class TestToSummarizedJson:
 class TestSummarizeDataframe:
     """Tests for summarize_dataframe function."""
 
-    @patch("fundas.exporters._get_client")
+    @patch("fundas.exporters.dataframe._get_client")
     def test_summarize_dataframe_success(self, mock_get_client):
         """Test successful DataFrame summarization."""
         df = pd.DataFrame({"sales": [100, 200, 150], "region": ["A", "B", "A"]})
@@ -220,7 +220,7 @@ class TestSummarizeDataframe:
         assert "Region B" in summary
         mock_client.process_content.assert_called_once()
 
-    @patch("fundas.exporters._get_client")
+    @patch("fundas.exporters.dataframe._get_client")
     def test_summarize_dataframe_no_response(self, mock_get_client):
         """Test DataFrame summarization with no API response."""
         df = pd.DataFrame({"data": [1, 2, 3]})

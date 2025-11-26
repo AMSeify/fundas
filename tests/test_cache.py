@@ -167,10 +167,10 @@ class TestCacheIntegration:
             shutil.rmtree(self.temp_dir)
 
     @patch("fundas.cache.get_cache")
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_client_uses_cache(self, mock_post, mock_get_cache):
         """Test that OpenRouterClient uses cache."""
-        from fundas.core import OpenRouterClient
+        from fundas.client import OpenRouterClient
 
         # Set up mock cache
         mock_cache = Mock()
@@ -203,10 +203,10 @@ class TestCacheIntegration:
 
         assert result1 == result2
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_client_without_cache(self, mock_post):
         """Test that OpenRouterClient can work without cache."""
-        from fundas.core import OpenRouterClient
+        from fundas.client import OpenRouterClient
 
         mock_response = Mock()
         mock_response.json.return_value = {

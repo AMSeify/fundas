@@ -1,5 +1,5 @@
 """
-Exporter module for Fundas.
+DataFrame exporter functions for Fundas.
 
 This module provides functions to export DataFrames to various formats
 with AI-powered transformation and summarization.
@@ -9,7 +9,7 @@ import pandas as pd
 from typing import Optional, Union
 from pathlib import Path
 
-from .core import OpenRouterClient
+from ..client import OpenRouterClient
 
 
 def _get_client(

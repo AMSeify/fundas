@@ -1,8 +1,8 @@
 """
-Fundas - AI-powered data import library using OpenRouter API
+Fundas - OpenRouter API Client
 
-Core functionality for communicating with OpenRouter API to extract
-structured data from various file types.
+This module provides the OpenRouterClient class for communicating with
+the OpenRouter API to extract structured data from various content types.
 """
 
 import os
@@ -13,6 +13,7 @@ from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from dotenv import load_dotenv
 
 from .cache import get_cache
+from .utils.json_parser import parse_json_from_response, normalize_data
 
 if TYPE_CHECKING:
     from .schema import Schema
@@ -63,6 +64,60 @@ class OpenRouterClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
+    def _make_request(
+        self,
+        payload: Dict[str, Any],
+        timeout: int = 60,
+    ) -> Dict[str, Any]:
+        """
+        Make a request to the OpenRouter API with retry logic.
+
+        Args:
+            payload: Request payload
+            timeout: Request timeout in seconds
+
+        Returns:
+            Response JSON
+
+        Raises:
+            RuntimeError: If API communication fails after all retries
+            ValueError: If the model is not supported or request is invalid
+        """
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        last_exception = None
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    self.base_url, headers=headers, json=payload, timeout=timeout
+                )
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.HTTPError as e:
+                # Check for specific error codes
+                if e.response and e.response.status_code == 400:
+                    raise ValueError(f"Invalid request: {str(e)}") from e
+                elif e.response and e.response.status_code == 401:
+                    raise ValueError("Invalid API key") from e
+                elif e.response and e.response.status_code == 404:
+                    raise ValueError(f"Model not found: {self.model}") from e
+                last_exception = e
+            except requests.exceptions.RequestException as e:
+                last_exception = e
+
+            # Wait before retry (except on last attempt)
+            if attempt < self.max_retries - 1:
+                time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
+
+        # All retries failed
+        raise RuntimeError(
+            f"Error communicating with OpenRouter API after "
+            f"{self.max_retries} attempts: {str(last_exception)}"
+        )
+
     def process_content(
         self,
         content: str,
@@ -96,11 +151,6 @@ class OpenRouterClient:
             {"role": "user", "content": f"{prompt}\n\nContent to analyze:\n{content}"}
         )
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
         payload = {
             "model": self.model,
             "messages": messages,
@@ -110,36 +160,7 @@ class OpenRouterClient:
         if response_format:
             payload["response_format"] = response_format
 
-        # Retry logic
-        last_exception = None
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.post(
-                    self.base_url, headers=headers, json=payload, timeout=60
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.HTTPError as e:
-                # Check for specific error codes
-                if e.response and e.response.status_code == 400:
-                    raise ValueError(f"Invalid request: {str(e)}") from e
-                elif e.response and e.response.status_code == 401:
-                    raise ValueError("Invalid API key") from e
-                elif e.response and e.response.status_code == 404:
-                    raise ValueError(f"Model not found: {self.model}") from e
-                last_exception = e
-            except requests.exceptions.RequestException as e:
-                last_exception = e
-
-            # Wait before retry (except on last attempt)
-            if attempt < self.max_retries - 1:
-                time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
-
-        # All retries failed
-        raise RuntimeError(
-            f"Error communicating with OpenRouter API after "
-            f"{self.max_retries} attempts: {str(last_exception)}"
-        )
+        return self._make_request(payload)
 
     def process_content_with_image(
         self, image_base64: str, prompt: str, system_prompt: Optional[str] = None
@@ -174,46 +195,12 @@ class OpenRouterClient:
             }
         )
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
         payload = {
             "model": self.model,
             "messages": messages,
         }
 
-        # Retry logic
-        last_exception = None
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.post(
-                    self.base_url, headers=headers, json=payload, timeout=60
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.HTTPError as e:
-                # Check for specific error codes
-                if e.response and e.response.status_code == 400:
-                    raise ValueError(f"Invalid request: {str(e)}") from e
-                elif e.response and e.response.status_code == 401:
-                    raise ValueError("Invalid API key") from e
-                elif e.response and e.response.status_code == 404:
-                    raise ValueError(f"Model not found: {self.model}") from e
-                last_exception = e
-            except requests.exceptions.RequestException as e:
-                last_exception = e
-
-            # Wait before retry (except on last attempt)
-            if attempt < self.max_retries - 1:
-                time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
-
-        # All retries failed
-        raise RuntimeError(
-            f"Error communicating with OpenRouter API after "
-            f"{self.max_retries} attempts: {str(last_exception)}"
-        )
+        return self._make_request(payload)
 
     def extract_structured_data(
         self, content: str, prompt: str, columns: Optional[List[str]] = None
@@ -266,60 +253,18 @@ class OpenRouterClient:
         if "choices" in response and len(response["choices"]) > 0:
             response_text = response["choices"][0]["message"]["content"]
 
-            # Try to parse JSON from the response
-            try:
-                # Look for JSON in the response
-                # (it might be wrapped in markdown code blocks)
-                if "```json" in response_text:
-                    json_start = response_text.find("```json") + 7
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                elif "```" in response_text:
-                    json_start = response_text.find("```") + 3
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                else:
-                    json_str = response_text.strip()
+            # Parse JSON from the response
+            data = parse_json_from_response(response_text)
 
-                data = json.loads(json_str)
+            # Normalize data
+            if isinstance(data, dict) and "content" not in data:
+                data = normalize_data(data)
 
-                # Normalize data: ensure all arrays have the same length
-                if isinstance(data, dict):
-                    # Find the maximum length
-                    max_len = max(
-                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
-                        default=1,
-                    )
-                    # Pad shorter arrays with None or repeat last value
-                    normalized_data = {}
-                    for key, value in data.items():
-                        if isinstance(value, list):
-                            if len(value) < max_len:
-                                # Pad with None
-                                normalized_data[key] = value + [None] * (
-                                    max_len - len(value)
-                                )
-                            else:
-                                normalized_data[key] = value
-                        else:
-                            # Convert single values to list
-                            normalized_data[key] = [value] * max_len
-                    data = normalized_data
+            # Cache the result
+            if self.use_cache and self.cache:
+                self.cache.set(content, prompt, self.model, data, columns)
 
-                # Cache the result
-                if self.use_cache and self.cache:
-                    self.cache.set(content, prompt, self.model, data, columns)
-
-                return data
-            except json.JSONDecodeError:
-                # If JSON parsing fails, return raw text in a structured format
-                result = {"content": [response_text]}
-
-                # Cache even the fallback result
-                if self.use_cache and self.cache:
-                    self.cache.set(content, prompt, self.model, result, columns)
-
-                return result
+            return data
 
         return {"content": ["No response from API"]}
 
@@ -423,57 +368,26 @@ class OpenRouterClient:
         if "choices" in response and len(response["choices"]) > 0:
             response_text = response["choices"][0]["message"]["content"]
 
-            # Try to parse JSON from the response
-            try:
-                # Look for JSON in the response
-                if "```json" in response_text:
-                    json_start = response_text.find("```json") + 7
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                elif "```" in response_text:
-                    json_start = response_text.find("```") + 3
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                else:
-                    json_str = response_text.strip()
+            # Parse JSON from the response
+            data = parse_json_from_response(response_text)
 
-                data = json.loads(json_str)
-
-                # Normalize data: ensure all arrays have the same length
-                if isinstance(data, dict):
-                    max_len = max(
-                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
-                        default=1,
-                    )
-                    normalized_data = {}
-                    for key, value in data.items():
-                        if isinstance(value, list):
-                            if len(value) < max_len:
-                                normalized_data[key] = value + [None] * (
-                                    max_len - len(value)
-                                )
-                            else:
-                                normalized_data[key] = value
-                        else:
-                            normalized_data[key] = [value] * max_len
-                    data = normalized_data
+            # Normalize and convert data
+            if isinstance(data, dict) and "content" not in data:
+                data = normalize_data(data)
 
                 # Cache the raw result (before type conversion)
                 if self.use_cache and self.cache:
                     self.cache.set(content, prompt, self.model, data, cache_key_columns)
 
                 # Apply type conversion from schema
-                converted_data = schema.convert_data(data)
-
-                return converted_data
-
-            except json.JSONDecodeError:
-                result = {"content": [response_text]}
+                return schema.convert_data(data)
+            else:
+                # Cache even the fallback result
                 if self.use_cache and self.cache:
                     self.cache.set(
-                        content, prompt, self.model, result, cache_key_columns
+                        content, prompt, self.model, data, cache_key_columns
                     )
-                return result
+                return data
 
         return {"content": ["No response from API"]}
 
@@ -544,49 +458,12 @@ class OpenRouterClient:
             }
         )
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
         payload = {
             "model": self.model,
             "messages": messages,
         }
 
-        # Retry logic with longer timeout for audio
-        last_exception = None
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.post(
-                    self.base_url, headers=headers, json=payload, timeout=180
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.HTTPError as e:
-                if e.response and e.response.status_code == 400:
-                    error_msg = str(e)
-                    try:
-                        error_detail = e.response.json()
-                        error_msg = error_detail.get("error", {}).get("message", str(e))
-                    except Exception:
-                        pass
-                    raise ValueError(f"Invalid request: {error_msg}") from e
-                elif e.response and e.response.status_code == 401:
-                    raise ValueError("Invalid API key") from e
-                elif e.response and e.response.status_code == 404:
-                    raise ValueError(f"Model not found: {self.model}") from e
-                last_exception = e
-            except requests.exceptions.RequestException as e:
-                last_exception = e
-
-            if attempt < self.max_retries - 1:
-                time.sleep(self.retry_delay * (attempt + 1))
-
-        raise RuntimeError(
-            f"Error processing audio after {self.max_retries} attempts: "
-            f"{str(last_exception)}"
-        )
+        return self._make_request(payload, timeout=180)
 
     def extract_structured_data_from_audio(
         self,
@@ -652,52 +529,18 @@ class OpenRouterClient:
         if "choices" in response and len(response["choices"]) > 0:
             response_text = response["choices"][0]["message"]["content"]
 
-            # Try to parse JSON from the response
-            try:
-                # Look for JSON in the response
-                if "```json" in response_text:
-                    json_start = response_text.find("```json") + 7
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                elif "```" in response_text:
-                    json_start = response_text.find("```") + 3
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                else:
-                    json_str = response_text.strip()
+            # Parse JSON from the response
+            data = parse_json_from_response(response_text)
 
-                data = json.loads(json_str)
+            # Normalize data
+            if isinstance(data, dict) and "content" not in data:
+                data = normalize_data(data)
 
-                # Normalize data: ensure all arrays have the same length
-                if isinstance(data, dict):
-                    max_len = max(
-                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
-                        default=1,
-                    )
-                    normalized_data = {}
-                    for key, value in data.items():
-                        if isinstance(value, list):
-                            if len(value) < max_len:
-                                normalized_data[key] = value + [None] * (
-                                    max_len - len(value)
-                                )
-                            else:
-                                normalized_data[key] = value
-                        else:
-                            normalized_data[key] = [value] * max_len
-                    data = normalized_data
+            # Cache the result
+            if self.use_cache and self.cache:
+                self.cache.set(cache_key, prompt, self.model, data, columns)
 
-                # Cache the result
-                if self.use_cache and self.cache:
-                    self.cache.set(cache_key, prompt, self.model, data, columns)
-
-                return data
-
-            except json.JSONDecodeError:
-                result = {"content": [response_text]}
-                if self.use_cache and self.cache:
-                    self.cache.set(cache_key, prompt, self.model, result, columns)
-                return result
+            return data
 
         return {"content": ["No response from API"]}
 
@@ -755,53 +598,17 @@ class OpenRouterClient:
         if "choices" in response and len(response["choices"]) > 0:
             response_text = response["choices"][0]["message"]["content"]
 
-            # Try to parse JSON from the response
-            try:
-                # Look for JSON in the response
-                # (it might be wrapped in markdown code blocks)
-                if "```json" in response_text:
-                    json_start = response_text.find("```json") + 7
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                elif "```" in response_text:
-                    json_start = response_text.find("```") + 3
-                    json_end = response_text.find("```", json_start)
-                    json_str = response_text[json_start:json_end].strip()
-                else:
-                    json_str = response_text.strip()
+            # Parse JSON from the response
+            data = parse_json_from_response(response_text)
 
-                data = json.loads(json_str)
+            # Normalize data
+            if isinstance(data, dict) and "content" not in data:
+                data = normalize_data(data)
 
-                # Normalize data to ensure all arrays have the same length
-                if isinstance(data, dict):
-                    # Find the maximum length among all arrays
-                    max_length = max(
-                        (len(v) if isinstance(v, list) else 1 for v in data.values()),
-                        default=1,
-                    )
+            # Cache the result
+            if self.use_cache and self.cache:
+                self.cache.set(image_base64, prompt, self.model, data, columns)
 
-                    # Pad shorter arrays with None
-                    for key, value in data.items():
-                        if isinstance(value, list):
-                            if len(value) < max_length:
-                                data[key] = value + [None] * (max_length - len(value))
-                        else:
-                            # If value is not a list, convert it to a list
-                            data[key] = [value] + [None] * (max_length - 1)
-
-                # Cache the result
-                if self.use_cache and self.cache:
-                    self.cache.set(image_base64, prompt, self.model, data, columns)
-
-                return data
-            except json.JSONDecodeError:
-                # If JSON parsing fails, return raw text in a structured format
-                result = {"content": [response_text]}
-
-                # Cache even the fallback result
-                if self.use_cache and self.cache:
-                    self.cache.set(image_base64, prompt, self.model, result, columns)
-
-                return result
+            return data
 
         return {"content": ["No response from API"]}

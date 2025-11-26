@@ -38,7 +38,7 @@ class TestReadPdf:
     """Tests for read_pdf function."""
 
     @patch("PyPDF2.PdfReader")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.pdf._get_client")
     def test_read_pdf_success(self, mock_get_client, mock_pdf_reader):
         """Test successful PDF reading."""
         # Setup mock PDF reader
@@ -77,7 +77,7 @@ class TestReadPdf:
             read_pdf("nonexistent.pdf")
 
     @patch("PyPDF2.PdfReader")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.pdf._get_client")
     def test_read_pdf_with_columns(self, mock_get_client, mock_pdf_reader):
         """Test PDF reading with specified columns."""
         mock_page = Mock()
@@ -124,7 +124,7 @@ class TestReadImage:
     """Tests for read_image function."""
 
     @patch("PIL.Image.open")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.image._get_client")
     def test_read_image_success(self, mock_get_client, mock_image_open):
         """Test successful image reading."""
         mock_img_instance = Mock()
@@ -158,7 +158,7 @@ class TestReadImage:
             read_image("nonexistent.png")
 
     @patch("PIL.Image.open")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.image._get_client")
     def test_read_image_with_custom_model(self, mock_get_client, mock_image_open):
         """Test image reading with custom model."""
         mock_img_instance = Mock()
@@ -184,7 +184,7 @@ class TestReadImage:
             os.unlink(tmp_path)
 
     @patch("PIL.Image.open")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.image._get_client")
     def test_read_image_ocr_mode_with_language(self, mock_get_client, mock_image_open):
         """Test OCR mode with custom language."""
         # Mock pytesseract at the import level
@@ -227,7 +227,7 @@ class TestReadImage:
 
     @patch("builtins.open", create=True)
     @patch("PIL.Image.open")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.image._get_client")
     def test_read_image_direct_mode(self, mock_get_client, mock_image_open, mock_open):
         """Test direct mode with vision model."""
         # Mock image file reading
@@ -280,7 +280,7 @@ class TestReadImage:
             os.unlink(tmp_path)
 
     @patch("PIL.Image.open")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.image._get_client")
     def test_read_image_ocr_mode_default(self, mock_get_client, mock_image_open):
         """Test OCR mode as default with default English language."""
         with patch.dict("sys.modules", {"pytesseract": Mock()}):
@@ -321,7 +321,7 @@ class TestReadImage:
 class TestReadAudio:
     """Tests for read_audio function."""
 
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.audio._get_client")
     def test_read_audio_success(self, mock_get_client):
         """Test successful audio reading."""
         mock_client = Mock()
@@ -349,7 +349,7 @@ class TestReadAudio:
         with pytest.raises(FileNotFoundError):
             read_audio("nonexistent.mp3")
 
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.audio._get_client")
     def test_read_audio_with_columns(self, mock_get_client):
         """Test audio reading with specified columns."""
         mock_client = Mock()
@@ -375,7 +375,7 @@ class TestReadWebpage:
     """Tests for read_webpage function."""
 
     @patch("requests.Session.get")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.webpage._get_client")
     def test_read_webpage_success(self, mock_get_client, mock_get):
         """Test successful webpage reading."""
         mock_response = Mock()
@@ -409,7 +409,7 @@ class TestReadWebpage:
             read_webpage("https://example.com", api_key="test-key")
 
     @patch("requests.Session.get")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.webpage._get_client")
     def test_read_webpage_with_columns(self, mock_get_client, mock_get):
         """Test webpage reading with specified columns."""
         mock_response = Mock()
@@ -436,7 +436,7 @@ class TestReadVideo:
     """Tests for read_video function."""
 
     @patch("cv2.VideoCapture")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.video._get_client")
     def test_read_video_success(self, mock_get_client, mock_video_capture):
         """Test successful video reading."""
         mock_video = Mock()
@@ -475,7 +475,7 @@ class TestReadVideo:
             read_video("nonexistent.mp4")
 
     @patch("cv2.VideoCapture")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.video._get_client")
     def test_read_video_from_audios(self, mock_get_client, mock_video_capture):
         """Test video reading with audio extraction."""
         mock_video = Mock()
@@ -507,7 +507,7 @@ class TestReadVideo:
             os.unlink(tmp_path)
 
     @patch("cv2.VideoCapture")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.video._get_client")
     def test_read_video_from_both(self, mock_get_client, mock_video_capture):
         """Test video reading with both pics and audio."""
         mock_video = Mock()
@@ -551,7 +551,7 @@ class TestReadVideo:
             os.unlink(tmp_path)
 
     @patch("cv2.VideoCapture")
-    @patch("fundas.readers._get_client")
+    @patch("fundas.readers.video._get_client")
     def test_read_video_custom_sample_rate(self, mock_get_client, mock_video_capture):
         """Test video reading with custom sample rate."""
         mock_video = Mock()

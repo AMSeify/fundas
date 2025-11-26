@@ -49,8 +49,8 @@ Repository = "https://github.com/AMSeify/fundas"
 Documentation = "https://github.com/AMSeify/fundas#readme"
 "Bug Tracker" = "https://github.com/AMSeify/fundas/issues"
 
-[tool.setuptools]
-packages = ["fundas"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.dynamic]
 version = {attr = "fundas.__version__"}

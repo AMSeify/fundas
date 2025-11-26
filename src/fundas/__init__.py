@@ -23,6 +23,7 @@ Schema classes:
 
 __version__ = "0.1.1"
 
+# Import from new package structure
 from .readers import (
     read_pdf,
     read_image,
@@ -38,7 +39,11 @@ from .exporters import (
     summarize_dataframe,
 )
 
-from .core import OpenRouterClient
+# Import client from new location (backward compatible)
+from .client import OpenRouterClient
+
+# Backward compatibility: also expose OpenRouterClient from .core
+# This allows existing code using `from fundas.core import OpenRouterClient` to work
 from .cache import get_cache, APICache
 from .schema import Schema, Column, DataType
 

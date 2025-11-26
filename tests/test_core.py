@@ -1,10 +1,10 @@
 """
-Tests for fundas.core module.
+Tests for fundas.client module (formerly fundas.core).
 """
 
 import pytest
 from unittest.mock import Mock, patch
-from fundas.core import OpenRouterClient
+from fundas.client import OpenRouterClient
 
 
 class TestOpenRouterClient:
@@ -34,7 +34,7 @@ class TestOpenRouterClient:
             client = OpenRouterClient()
             assert client.api_key == "env-key"
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_process_content_success(self, mock_post):
         """Test successful content processing."""
         mock_response = Mock()
@@ -50,7 +50,7 @@ class TestOpenRouterClient:
         assert result["choices"][0]["message"]["content"] == "Test response"
         mock_post.assert_called_once()
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_process_content_with_system_prompt(self, mock_post):
         """Test content processing with system prompt."""
         mock_response = Mock()
@@ -74,7 +74,7 @@ class TestOpenRouterClient:
         assert messages[0]["role"] == "system"
         assert messages[1]["role"] == "user"
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_process_content_api_error(self, mock_post):
         """Test handling of API errors."""
         import requests
@@ -87,7 +87,7 @@ class TestOpenRouterClient:
         ):
             client.process_content("test content", "test prompt")
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_extract_structured_data_json_response(self, mock_post):
         """Test extracting structured data with JSON response."""
         mock_response = Mock()
@@ -102,7 +102,7 @@ class TestOpenRouterClient:
 
         assert result == {"name": ["John"], "age": ["30"]}
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_extract_structured_data_markdown_json(self, mock_post):
         """Test extracting structured data from markdown-wrapped JSON."""
         mock_response = Mock()
@@ -123,7 +123,7 @@ class TestOpenRouterClient:
 
         assert result == {"name": ["John"], "age": ["30"]}
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_extract_structured_data_with_columns(self, mock_post):
         """Test extracting structured data with specified columns."""
         mock_response = Mock()
@@ -149,7 +149,7 @@ class TestOpenRouterClient:
             assert "name" in system_msg
             assert "age" in system_msg
 
-    @patch("fundas.core.requests.post")
+    @patch("fundas.client.requests.post")
     def test_extract_structured_data_invalid_json(self, mock_post):
         """Test extracting structured data with invalid JSON response."""
         mock_response = Mock()
