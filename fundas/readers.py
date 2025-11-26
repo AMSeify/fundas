@@ -27,7 +27,7 @@ def _extract_data(
     content: str,
     prompt: str,
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
 ) -> dict:
     """
     Extract data using either schema-based or column-based extraction.
@@ -48,7 +48,7 @@ def _extract_data(
         return client.extract_structured_data(content, prompt, columns)
 
 
-def _apply_schema_dtypes(df: pd.DataFrame, schema: Optional["Schema"]) -> pd.DataFrame:
+def _apply_schema_dtypes(df: pd.DataFrame, schema: Optional["fundas.schema.Schema"]) -> pd.DataFrame:
     """
     Apply schema data types to DataFrame columns.
 
@@ -89,7 +89,7 @@ def read_pdf(
     filepath: Union[str, Path],
     prompt: str = "Extract all text and tabular data from this PDF",
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
 ) -> pd.DataFrame:
@@ -156,7 +156,7 @@ def read_image(
     filepath: Union[str, Path],
     prompt: str = "Describe what you see in this image and extract any text or data",
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     mode: str = "ocr",
@@ -293,7 +293,7 @@ def read_audio(
     filepath: Union[str, Path],
     prompt: str = "Transcribe this audio and extract key information",
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     language: Optional[str] = None,
@@ -305,39 +305,30 @@ def read_audio(
     Read an audio file and convert it to a pandas DataFrame using AI extraction.
 
     This function supports two transcription methods:
-    1. Local Whisper (default): Uses OpenAI's Whisper model locally for transcription,
-       then sends text to LLM for structured extraction.
-    2. OpenRouter API (use_openrouter=True): Sends audio directly to audio-capable
-       models like google/gemini-2.5-flash for transcription and extraction in one step.
 
-    Supports MP3 and WAV formats for OpenRouter, and additional formats (FLAC, OGG,
-    M4A, etc.) for local Whisper transcription.
+    1.  **Local Whisper (default)**: Uses OpenAI's Whisper model locally for
+        transcription, then sends text to an LLM for structured extraction.
+    2.  **OpenRouter API (`use_openrouter=True`)**: Sends audio directly to
+        audio-capable models like ``google/gemini-2.5-flash`` for transcription
+        and extraction in one step.
+
+    Supports MP3 and WAV formats for OpenRouter, and additional formats (FLAC,
+    OGG, M4A, etc.) for local Whisper transcription.
 
     Args:
-        filepath: Path to the audio file
-            - For OpenRouter: mp3, wav supported
-            - For local Whisper: mp3, wav, flac, ogg, m4a, and more
-        prompt: Prompt describing what data to extract from the audio
-        columns: Optional list of column names to extract
-        schema: Optional Schema object for structured output with type enforcement
-        api_key: Optional OpenRouter API key
-            (uses OPENROUTER_API_KEY env var if not provided)
+        filepath: Path to the audio file.
+        prompt: Prompt describing what data to extract from the audio.
+        columns: Optional list of column names to extract.
+        schema: Optional :class:`~fundas.schema.Schema` object for structured
+            output with type enforcement.
+        api_key: Optional OpenRouter API key.
         model: Optional AI model to use.
-            - For OpenRouter audio: use audio-capable models
-              like "google/gemini-2.5-flash"
-            - For local Whisper + LLM: default is "openai/gpt-3.5-turbo"
         language: Language specification for better accuracy.
-            - For OpenRouter: use full name like "Persian", "Farsi",
-              "English", "Arabic"
-            - For local Whisper: use ISO codes like "fa", "en", "ar", "es"
-            Common language codes: "en" (English), "fa" (Persian/Farsi),
-            "ar" (Arabic), "es" (Spanish), "fr" (French), "de" (German),
-            "zh" (Chinese)
-        whisper_model: Whisper model size for local transcription
-            (ignored if use_openrouter=True).
-            Options: "tiny", "base", "small", "medium", "large",
-            "large-v2", "large-v3"
-            Default: "base". Use "medium" or "large" for non-English.
+        whisper_model: Whisper model size for local transcription (e.g.,
+            "base", "medium", "large").
+        device: Device to run local Whisper on ("cuda", "cpu").
+        use_openrouter: If ``True``, sends audio directly to OpenRouter.
+            This is recommended for non-English languages.
         device: Device to run local Whisper on ("cuda", "cpu", or None).
             Use "cpu" if you encounter GPU memory issues.
         use_openrouter: If True, send audio directly to OpenRouter.
@@ -483,7 +474,7 @@ def read_webpage(
     url: str,
     prompt: str = "Extract main content and data from this webpage",
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     headers: Optional[dict] = None,
@@ -783,7 +774,7 @@ def read_video(
     prompt: str = "Analyze this video and extract key information",
     from_: Union[str, List[str]] = "both",
     columns: Optional[List[str]] = None,
-    schema: Optional["Schema"] = None,
+    schema: Optional["fundas.schema.Schema"] = None,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     sample_rate: int = 30,

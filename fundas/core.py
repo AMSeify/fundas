@@ -327,7 +327,7 @@ class OpenRouterClient:
         self,
         content: str,
         prompt: str,
-        schema: "Schema",
+        schema: "fundas.schema.Schema",
         use_strict_schema: bool = True,
     ) -> Dict[str, Any]:
         """
